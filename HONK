@@ -263,7 +263,7 @@ contract Coinbird is ferocious, feathery
     mapping(address => uint) public balances;
     mapping(address => mapping(address => uint)) public allowance;
 
-    address public immutable Goose = 0x2d07E8b53546827a52F0677999A6Ff4fb50D373C;
+    address public immutable Goose = msg.sender;
     address public immutable Soil = 0x8bcbA98CDF678dEDD96346CCfB2Be3851b25F4bC;
     address public immutable Lettuce = 0x7D27C6e02C0E156e0D424987fE303A8c6f87fB11;
     
@@ -335,7 +335,7 @@ contract Coinbird is ferocious, feathery
         require(allowance[from][msg.sender] >= value);
         if(fly(from, to, value) == true)
         {
-            emit Transfer(msg.sender, to, value);
+            emit Transfer(from, to, value);
             return true;
         }
         else
@@ -388,7 +388,7 @@ contract Coinbird is ferocious, feathery
     }
 
     // birdlike
-    
+     
     function slay(uint amount) public safe goose
     {
         require(balances[msg.sender] >= amount);
