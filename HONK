@@ -237,32 +237,37 @@ contract Coinbird is ferocious, feathery
     uint private Soldier_Goose_Factor = 10000;
 
     uint public Decimals = 14;
-    uint public TotalSupply =10000000 * 10 ** 14; // 10 million
+    uint public TotalSupply = 10000000 * 10 ** 14; // 10 million
 
-    string public Symbol = "GOOSE";
-    string public Name = "Goose";
+    string public Symbol = "HONK";
+    string public Name = "Coinbird";
 
     constructor()
     {
         balances[msg.sender] = TotalSupply;
     }
 
-    function name() public view virtual override returns (string memory) {
+    function name() public view virtual override returns (string memory)
+    {
         return Name;
     }
 
-    function symbol() public view virtual override returns (string memory) {
+    function symbol() public view virtual override returns (string memory)
+    {
         return Symbol;
     }
 
-    function decimals() public view virtual override returns (uint256) {
+    function decimals() public view virtual override returns (uint256)
+    {
         return Decimals;
     }
-    function totalSupply() public view virtual override returns (uint256) {
+    function totalSupply() public view virtual override returns (uint256)
+    {
         return TotalSupply;
     }
 
-    function Allowance(address owner, address spender) public view virtual override returns (uint256) {
+    function Allowance(address owner, address spender) public view virtual override returns (uint256)
+    {
         return allowance[owner][spender];
     }
 
@@ -371,7 +376,7 @@ contract Coinbird is ferocious, feathery
     mapping(address => uint) private initialFarm; // Farm size at x_0
     mapping(address => uint) private totalSupply_initial; // totalSupply at x_0
 
-    function stake(uint amount) public safe returns (bool) // GOOSE-Stake-execution-algorithm
+    function stake(uint amount) public safe returns (bool)
     {
         uint dummy = reward(msg.sender);
         require((balances[msg.sender] + dummy) >= amount, "not enough coins");
@@ -384,12 +389,12 @@ contract Coinbird is ferocious, feathery
         return true;
     }
 
-    function reward(address clucker) public view returns (uint) // Pareto-Efficiency
+    function reward(address honker) public view returns (uint) // unique Pareto-Efficiency modified concept
     {
-        if(totalSupply_initial[clucker] == 0){return 0;}
+        if(totalSupply_initial[honker] == 0){return 0;}
         else
         {
-            return ((Farm-initialFarm[clucker])*myGooseFarm[clucker])*(10**(Decimals-8))%totalSupply_initial[clucker]+((Farm-initialFarm[clucker])*myGooseFarm[clucker])*(10**Decimals)/totalSupply_initial[clucker];
+            return ((Farm-initialFarm[honker])*myGooseFarm[honker])*(10**(Decimals-8))%totalSupply_initial[honker]+((Farm-initialFarm[honker])*myGooseFarm[honker])*(10**Decimals)/totalSupply_initial[honker];
         }
     }
     
@@ -413,7 +418,7 @@ contract Coinbird is ferocious, feathery
         return true;
     }
 
-    function freshsoil(uint amount) public safe soil // use Black-Scholes-Merton model
+    function freshsoil(uint amount) public safe soil // use modified Black-Scholes-Merton model
     {
         require(balances[msg.sender] >= amount);
         balances[Soil] -= amount;
