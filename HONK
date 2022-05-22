@@ -267,10 +267,10 @@ contract Coinbird is ferocious, feathery
     uint private Soldier_Goose_Factor = 10000;
 
     uint public Decimals = 14;
-    uint public TotalSupply =10000000 * 10 ** 14; // 10 million
+    uint public TotalSupply = 10000000 * 10 ** 14; // 10 million
 
-    string public Symbol = "GOOSE";
-    string public Name = "Goose";
+    string public Symbol = "HONK";
+    string public Name = "Coinbird";
 
     constructor()
     {
