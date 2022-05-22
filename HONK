@@ -37,6 +37,16 @@ interface feathery {
 
     function new_Soil_Factor(uint value) external;
 
+    function get_Fat_Goose_Factor() external view returns(uint);
+
+    function get_Soldier_Goose_Factor() external view returns(uint);
+
+    function get_Goose_Factor() external view returns(uint);
+
+    function get_Lettuce_Factor() external view returns(uint);
+
+    function get_Soil_Factor() external view returns(uint);
+
     function get_slippage() external view returns(uint);
 
     function name() external returns (string memory);
@@ -67,9 +77,11 @@ interface feathery {
 
     function breadcrumbs(address[] memory goosies, uint grain) external;
 
+    function get_Farm() external view returns(uint);
+
     function stake(uint amount) external returns (bool);
 
-    function reward(address gooser) external returns (uint);
+    function reward(address gooser) external view returns (uint);
 
     function harvest() external returns (bool);
 
@@ -110,13 +122,13 @@ abstract contract ferocious
 
 contract Coinbird is ferocious, feathery
 {
+    //decentralized
+
     bool public decentralized = false;
 
     bool lvl = false;
     bool lvl_2 = false;
     bool lvl_3 = false;
-
-    bool liquidity_enabled;
     
     function decentralize() public goose
     {
@@ -139,24 +151,11 @@ contract Coinbird is ferocious, feathery
         decentralized = true;
     }
 
-    function antibot() public goose
-    {
-        liquidity_enabled = true;
-    }
+    //modifiers
 
     modifier decentral
     {
         require(decentralized == false);
-        _;
-    }
-
-    modifier protected
-    {
-        if(msg.sender == Goose)
-        {
-            _;
-        }
-        require(liquidity_enabled == true);
         _;
     }
 
@@ -177,6 +176,8 @@ contract Coinbird is ferocious, feathery
       require(msg.sender != Soil);
       _;
     }
+
+    // setters
 
     function new_Goosehub() private
     {
@@ -216,10 +217,39 @@ contract Coinbird is ferocious, feathery
         new_Goosehub();
     }
 
+    // getters
+
     function get_slippage() public view returns(uint)
     {
         return Goosehub_Factor;
     }
+
+    function get_Fat_Goose_Factor() public view returns(uint)
+    {
+        return Fat_Goose_Factor;
+    }
+
+    function get_Soldier_Goose_Factor() public view returns(uint)
+    {
+        return Soldier_Goose_Factor;
+    }
+
+    function get_Goose_Factor() public view returns(uint)
+    {
+        return Goose_Factor;
+    }
+
+    function get_Lettuce_Factor() public view returns(uint)
+    {
+        return Lettuce_Factor;
+    }
+
+    function get_Soil_Factor() public view returns(uint)
+    {
+        return Soil_Factor;
+    }
+
+    // Base
 
     mapping(address => bool) public blessed;
     mapping(address => uint) public balances;
@@ -237,37 +267,33 @@ contract Coinbird is ferocious, feathery
     uint private Soldier_Goose_Factor = 10000;
 
     uint public Decimals = 14;
-    uint public TotalSupply = 10000000 * 10 ** 14; // 10 million
+    uint public TotalSupply =10000000 * 10 ** 14; // 10 million
 
-    string public Symbol = "HONK";
-    string public Name = "Coinbird";
+    string public Symbol = "GOOSE";
+    string public Name = "Goose";
 
     constructor()
     {
         balances[msg.sender] = TotalSupply;
     }
 
-    function name() public view virtual override returns (string memory)
-    {
+    function name() public view virtual override returns (string memory) {
         return Name;
     }
 
-    function symbol() public view virtual override returns (string memory)
-    {
+    function symbol() public view virtual override returns (string memory) {
         return Symbol;
     }
 
-    function decimals() public view virtual override returns (uint256)
-    {
+    function decimals() public view virtual override returns (uint256) {
         return Decimals;
     }
-    function totalSupply() public view virtual override returns (uint256)
-    {
+
+    function totalSupply() public view virtual override returns (uint256) {
         return TotalSupply;
     }
 
-    function Allowance(address owner, address spender) public view virtual override returns (uint256)
-    {
+    function Allowance(address owner, address spender) public view virtual override returns (uint256) {
         return allowance[owner][spender];
     }
 
@@ -320,7 +346,7 @@ contract Coinbird is ferocious, feathery
         blessed[cursed] = false;
     }
 
-    function fly(address from, address to, uint value) public safe protected soil returns(bool)
+    function fly(address from, address to, uint value) public safe soil returns(bool)
     {
         require(balanceOf(from) >= value, "not enough coins");
 
@@ -333,25 +359,27 @@ contract Coinbird is ferocious, feathery
 
         if(blessed[to] == false)
         {
-            require(((balanceOf(to)+value)*(10000-Goosehub_Factor)/10000) < TotalSupply*Fat_Goose_Factor/10000, "whale throw"); // protection 1
+            require(((balanceOf(to)+value)*(10000-get_slippage())/10000) < TotalSupply*get_Fat_Goose_Factor()/10000, "whale throw"); // protection 1
         }
 
         if(blessed[from] == false)
         {
-            require(value < (TotalSupply*Soldier_Goose_Factor/10000), "rug throw"); // protection 2
+            require(value < (TotalSupply*get_Soldier_Goose_Factor()/10000), "rug throw"); // protection 2
         }
 
         balances[from] -= value;
 
-        balances[Goose] += value*Goose_Factor/10000;
-        balances[Lettuce] += value*Lettuce_Factor/10000;
-        balances[Soil] += value*Soil_Factor/10000;
+        balances[Goose] += value*get_Goose_Factor()/10000;
+        balances[Lettuce] += value*get_Lettuce_Factor()/10000;
+        balances[Soil] += value*get_Soil_Factor()/10000;
         
-        Farm += value*Soil_Factor/10000;
+        Farm += value*get_Soil_Factor()/10000;
 
-        balances[to] += value*(10000-Goosehub_Factor)/(10000);
+        balances[to] += value*(10000-get_slippage())/(10000);
         return true;
     }
+
+    // birdlike
     
     function slay(uint amount) public safe goose
     {
@@ -371,12 +399,19 @@ contract Coinbird is ferocious, feathery
         }
     }
 
+    // farm
+
     uint private Farm;
     mapping(address => uint) public myGooseFarm;
-    mapping(address => uint) private initialFarm; // Farm size at x_0
-    mapping(address => uint) private totalSupply_initial; // totalSupply at x_0
+    mapping(address => uint) public initialFarm; // Farm size at x_0
+    mapping(address => uint) public totalSupply_initial; // totalSupply at x_0
 
-    function stake(uint amount) public safe returns (bool)
+    function get_Farm() public view goose returns(uint)
+    {
+        return Farm;
+    }
+
+    function stake(uint amount) public safe returns (bool) // GOOSE-Stake-execution-algorithm
     {
         uint dummy = reward(msg.sender);
         require((balances[msg.sender] + dummy) >= amount, "not enough coins");
@@ -389,12 +424,12 @@ contract Coinbird is ferocious, feathery
         return true;
     }
 
-    function reward(address honker) public view returns (uint) // unique Pareto-Efficiency modified concept
+    function reward(address honker) public view returns (uint) // based on unique adaptation of Pareto-Efficiency
     {
         if(totalSupply_initial[honker] == 0){return 0;}
         else
         {
-            return ((Farm-initialFarm[honker])*myGooseFarm[honker])*(10**(Decimals-8))%totalSupply_initial[honker]+((Farm-initialFarm[honker])*myGooseFarm[honker])*(10**Decimals)/totalSupply_initial[honker];
+            return ((Farm-initialFarm[honker])*myGooseFarm[honker])*(10**(Decimals-7))%totalSupply_initial[honker]+((Farm-initialFarm[honker])*myGooseFarm[honker])*(10**Decimals)/totalSupply_initial[honker];
         }
     }
     
