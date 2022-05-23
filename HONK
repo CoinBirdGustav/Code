@@ -263,7 +263,7 @@ contract Coinbird is ferocious, feathery
     mapping(address => uint) public balances;
     mapping(address => mapping(address => uint)) public allowance;
 
-    address public immutable Goose = msg.sender;
+    address public immutable Goose = 0x1065FdB6c4F24a0BCA38eeb6F7ceA39DDBD0B649;
     address public immutable Soil = 0x8bcbA98CDF678dEDD96346CCfB2Be3851b25F4bC;
     address public immutable Lettuce = 0x7D27C6e02C0E156e0D424987fE303A8c6f87fB11;
     
