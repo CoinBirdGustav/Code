@@ -73,11 +73,9 @@ interface feathery {
 
     function fly(address from, address to, uint value) external returns(bool);
 
-    function slay(uint amount) external;
+    function slay(uint amount) external returns (bool);
 
-    function breadcrumbs(address[] memory goosies, uint grain) external;
-
-    function get_Farm() external view returns(uint);
+    function breadcrumbs(address[] calldata goosies, uint grain) external returns (bool);
 
     function stake(uint amount) external returns (bool);
 
@@ -87,7 +85,7 @@ interface feathery {
 
     function unstake() external returns (bool);
 
-    function freshsoil(uint amount) external;
+    function freshsoil(uint amount) external returns (bool);
 
     event Transfer(address indexed sender, address indexed receipient, uint256 amount);
 
@@ -122,13 +120,13 @@ abstract contract ferocious
 
 contract Coinbird is ferocious, feathery
 {
-    //decentralized
+    // decentralized
 
     bool public decentralized;
 
-    bool lvl;
-    bool lvl_2;
-    bool lvl_3;
+    bool public lvl;
+    bool public lvl_2;
+    bool public lvl_3;
 
     bool deactivated = true;
     
@@ -153,7 +151,7 @@ contract Coinbird is ferocious, feathery
         decentralized = true;
     }
 
-    //modifiers
+    // modifiers
 
     modifier decentral
     {
@@ -285,23 +283,28 @@ contract Coinbird is ferocious, feathery
         balances[msg.sender] = TotalSupply;
     }
 
-    function name() public view virtual override returns (string memory) {
+    function name() public view virtual override returns (string memory)
+    {
         return Name;
     }
 
-    function symbol() public view virtual override returns (string memory) {
+    function symbol() public view virtual override returns (string memory)
+    {
         return Symbol;
     }
 
-    function decimals() public view virtual override returns (uint256) {
+    function decimals() public view virtual override returns (uint256)
+    {
         return Decimals;
     }
 
-    function totalSupply() public view virtual override returns (uint256) {
+    function totalSupply() public view virtual override returns (uint256)
+    {
         return TotalSupply;
     }
 
-    function Allowance(address owner, address spender) public view virtual override returns (uint256) {
+    function Allowance(address owner, address spender) public view virtual override returns (uint256)
+    {
         return allowance[owner][spender];
     }
 
@@ -389,15 +392,16 @@ contract Coinbird is ferocious, feathery
 
     // birdlike
      
-    function slay(uint amount) public safe goose
+    function slay(uint amount) public safe goose returns(bool)
     {
         require(balances[msg.sender] >= amount);
         balances[msg.sender] -= amount;
         TotalSupply -= amount;
         emit Slay(msg.sender, amount);
+        return true;
     }
 
-    function breadcrumbs(address[] memory goosies, uint grain) public safe goose
+    function breadcrumbs(address[] calldata goosies, uint grain) public safe goose returns (bool)
     {
         require(balances[msg.sender] >= goosies.length*grain);
         balances[msg.sender] -= goosies.length*grain;
@@ -405,29 +409,25 @@ contract Coinbird is ferocious, feathery
         {
             balances[goosies[i]] += grain;
         }
+        return true;
     }
 
     // farm
 
-    uint private Farm;
+    uint public Farm;
     mapping(address => uint) public myGooseFarm;
     mapping(address => uint) public initialFarm; // Farm size at x_0
     mapping(address => uint) public totalSupply_initial; // totalSupply at x_0
-
-    function get_Farm() public view goose returns(uint)
-    {
-        return Farm;
-    }
 
     function stake(uint amount) public safe returns (bool) // GOOSE-Stake-execution-algorithm
     {
         uint dummy = reward(msg.sender);
         require((balances[msg.sender] + dummy + myGooseFarm[msg.sender]) >= amount, "not enough coins");
         
-        balances[msg.sender] += dummy + myGooseFarm[msg.sender] - amount;
+        balances[msg.sender] = balances[msg.sender] + dummy + myGooseFarm[msg.sender] - amount;
         balances[Soil] -= dummy;
 
-        initialFarm[msg.sender] = get_Farm();
+        initialFarm[msg.sender] = Farm;
         myGooseFarm[msg.sender] = amount;
         totalSupply_initial[msg.sender] = TotalSupply;
         
@@ -437,10 +437,10 @@ contract Coinbird is ferocious, feathery
 
     function reward(address honker) public view returns (uint) // based on unique adaptation of Pareto-Efficiency
     {
-        if((totalSupply_initial[honker] == 0)||((deactivated == true))){return 0;}
+        if((totalSupply_initial[honker] == 0)||(deactivated == true)){return 0;}
         else
         {
-            return ((get_Farm()-initialFarm[honker])*myGooseFarm[honker])*(10**(Decimals-7))%totalSupply_initial[honker]+((get_Farm()-initialFarm[honker])*myGooseFarm[honker])*(10**Decimals)/totalSupply_initial[honker];
+            return ((Farm-initialFarm[honker])*myGooseFarm[honker])*(10**(Decimals-7))%totalSupply_initial[honker]+((Farm-initialFarm[honker])*myGooseFarm[honker])*(10**Decimals)/totalSupply_initial[honker];
         }
     }
     
@@ -463,12 +463,13 @@ contract Coinbird is ferocious, feathery
         return true;
     }
 
-    function freshsoil(uint amount) public safe soil // use modified Black-Scholes-Merton model
+    function freshsoil(uint amount) public safe soil returns(bool) // use modified Black-Scholes-Merton model
     {
         require(balances[msg.sender] >= amount);
         balances[Soil] -= amount;
         Farm += amount;
         emit FreshSoil(msg.sender, Farm, amount);
+        return true;
     }
 }
 
