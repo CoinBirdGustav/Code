@@ -2,9 +2,10 @@
 
 /*
  * By interacting with this smart contract you irrevocably agree to all the rules laid out at coinbird.io under "rules", you confirm you are of legal age and that you are interacting with and using this smart contract at you own risk.
- * An extensive variety of security measures for the user's and community's safety have been implemented. For more information read through the smart contract, refer to the "for your safety" section on the coinbird.io website and please follow all the safety tips that we've laid out for your general protection. Please take this seriously, it is really important for you.
- * The three wallets associated with coinbird.io can be found in this smart contract. Their interactions are all logged and they are bound to full transparency and open source fund management - meaning you may request further information on any transaction that was executed by them by contacting me through the "talk to me" section at coinbird.io
- * I hope you have fun with the coinbird, let us create a friendly and kind community that will go down in history as something beautiful. Gustav the coinbird is very excited to revolutionize the world :)
+ * Please, for your own safety in the Web³ world, read carefully through all the tips and information that we've laid out for you at the "for your safety" section on the coinbird.io website.
+ * An extensive variety of security measures for the user's and community's safety have been implemented from our part but you need to exercise due diligence.
+ * There are two wallets associated with this project that are operated by coinbird.io (Gustav and Lettuce), the other three are contracts.
+ * I hope you have fun with the coinbird and please abide by our principles: Never attack other communities or talk bad about other projects. We will make the biggest impact in history by being kind and helpful to one another.
  */
 
 /*
@@ -14,7 +15,7 @@
  * t.me/CoinbirdHONK - Gustav (Announcements)
  * t.me/CoinbirdHONKERS - Community
  * contact: gustav@coinbird.io
- * This code was coneptualized by the "Gustav the Coinbird" and developed together with "Charlie the Cryptopupper" over the course of several weeks.
+ * This code was conceptualized by "Gustav the Coinbird" and developed together with "Charlie the Cryptopupper" over the course of several weeks.
  * No part of this smart contract may be copied without permission from the developers.
  * If you wish to copy or use a modified part of the smart contract contact me directly.
  */
