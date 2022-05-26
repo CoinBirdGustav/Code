@@ -29,6 +29,8 @@ interface feathery {
 
     function decentralize_4() external;
 
+    function delete_GameGeese() external returns(bool);
+
     function set_Farm(address Field) external;
 
     function set_Securities(address Protected) external;
@@ -51,9 +53,9 @@ interface feathery {
 
     function farm_protection() external;
 
-    function anti_whale(address to, uint value) external view;
+    function anti_whale(address to, uint value) external view returns (bool);
 
-    function anti_rug(address from, uint value) external view;
+    function anti_rug(address from, uint value) external view returns (bool);
 
     function get_FarmGeese_Length() external view returns(uint);
 
@@ -196,19 +198,6 @@ contract Coinbird is ferocious, feathery
       _;
     }
 
-    modifier protected
-    {
-        if(secure == false)
-        {
-            require(msg.sender == Goose);
-            _;
-        }
-        else
-        {
-            _;
-        }
-    }
-
     // setters
 
     function set_Farm(address Field) public goose
@@ -289,20 +278,22 @@ contract Coinbird is ferocious, feathery
 
     // getters
 
-    function anti_whale(address to, uint value) public view // protection 1
+    function anti_whale(address to, uint value) public view returns (bool) // protection 1
     {
-        if(blessed[to] == false)
+        if((blessed[to] == false)&&((balanceOf(to)+value*(10000-Goosehub_Factor) / 10000) > (TotalSupply*Fat_Goose_Factor/10000)))
         {
-            require((balanceOf(to)+value*(10000-Goosehub_Factor) / 10000) < (TotalSupply*Fat_Goose_Factor/10000), "whale throw");
+            return true;
         }
+        return false;
     }
 
-    function anti_rug(address from, uint value) public view // protection 2
+    function anti_rug(address from, uint value) public view returns (bool) // protection 2
     {
-        if(blessed[from] == false)
+        if((blessed[from] == false)&&(value > (TotalSupply*Soldier_Goose_Factor/10000)))
         {
-            require(value < (TotalSupply*Soldier_Goose_Factor/10000), "rug throw");
+            return true;
         }
+        return false;
     }
 
     function get_FarmGeese_Length() public view returns(uint)
@@ -316,19 +307,19 @@ contract Coinbird is ferocious, feathery
     mapping(address => uint) public balances;
     mapping(address => mapping(address => uint)) public allowance;
 
-    address public immutable Goose = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
-    address public immutable Lettuce = 0x7D27C6e02C0E156e0D424987fE303A8c6f87fB11;
-    address public Game = 0x8bcbA98CDF678dEDD96346CCfB2Be3851b25F4bC;
+    address public immutable Goose = 0x1065FdB6c4F24a0BCA38eeb6F7ceA39DDBD0B649;
+    address public immutable Lettuce = 0x75F59287eD38a707C0607D2F2aaFBFbcF1E4A819;
+    address public Game;
     address public Farm;
     address public Securities;
 
-    uint public Lettuce_Factor;
-    uint public Game_Factor;
-    uint public Goose_Factor;
-    uint public Farm_Factor;
-    uint public Goosehub_Factor;
-    uint public Fat_Goose_Factor = 10000;
-    uint public Soldier_Goose_Factor = 10000;
+    uint public Lettuce_Factor = 100;
+    uint public Game_Factor = 100;
+    uint public Goose_Factor = 100;
+    uint public Farm_Factor = 100;
+    uint public Goosehub_Factor = 400;
+    uint public Fat_Goose_Factor = 1;
+    uint public Soldier_Goose_Factor = 1;
 
     uint public Decimals = 14;
     uint public TotalSupply = 10000000 * 10 ** 14; // 10 million
@@ -405,11 +396,12 @@ contract Coinbird is ferocious, feathery
         }
     }
 
-    function fly(address from, address to, uint value) public protected safe returns(bool)
+    function fly(address from, address to, uint value) public safe returns(bool)
     {
-        if((participatedGame[to] == false) && (blessed[to] == false) && (to != Lettuce) && (to != Goose) && (to != Game) && (to != Farm))
+        if((participatedGame[to] == false) && (to != Lettuce) && (to != Goose) && (to != Game) && (to != Farm) && (to != Securities) && (value >= threshold))
         {
             GameGeese.push(to);
+            participatedGame[to] = true;
         }
         require(from != address(0));
         require((from != Farm)&&(from != Securities)&&(from != Game));
@@ -422,8 +414,15 @@ contract Coinbird is ferocious, feathery
             return true;
         }
 
-        anti_whale(to, value);
-        anti_rug(from, value);
+        if(anti_whale(to, value) == true)
+        {
+            return false;
+        }
+
+        if(anti_rug(from, value) == true)
+        {
+            return false;
+        }
 
         balances[from] -= value;
 
@@ -490,9 +489,15 @@ contract Coinbird is ferocious, feathery
     uint public threshold;
     uint private factor;
 
+    function delete_GameGeese() public goose returns(bool)
+    {
+        delete GameGeese;
+        return true;
+    }
+
     function set_numberOfLuckyGeese(uint Gustav, uint Henrietta, uint max) public goose
     {
-        require((max <= GameGeese.length)&&(luckyGeese == 0)&&(protected_flock == false));
+        require((max <= GameGeese.length)&&(luckyGeese == 0)&&(protected_flock == true));
         luckyGeese = uint(keccak256(abi.encodePacked(block.difficulty+Gustav*Henrietta, (block.timestamp-Gustav)%Henrietta, msg.sender)))%max+1;
         factor = balances[Game]*9/10/luckyGeese;
     }
@@ -512,7 +517,7 @@ contract Coinbird is ferocious, feathery
     {
         require((protected_flock == true)&&(luckyGeese > 0));
         address winner = GameGeese[uint(keccak256(abi.encodePacked(block.difficulty+Gustav*Henrietta, (block.timestamp-Gustav)%Henrietta, msg.sender)))%(GameGeese.length)];
-        require(balances[winner] >= threshold);
+        require((balances[winner] >= threshold)&&(blessed[winner] == false));
         balances[winner] += factor;
         balances[Game] -= factor;
         luckyGeese--;
@@ -527,19 +532,19 @@ contract Coinbird is ferocious, feathery
         balances[Goose] += balances[Game];
         balances[Game] = 0;
         protected_flock = true;
-        emit Transfer(Game, Lettuce, balances[Game]);
+        emit Transfer(Game, Goose, balances[Game]);
     }
 
     // carrot
 
-    mapping(address => bool) private participatedFarm;
+    mapping(address => bool) public participatedFarm;
 
     address[] public FarmGeese;
 
-    uint private FarmGoose;
+    uint public FarmGoose;
     mapping(address => uint) public myGooseFarm;
-    mapping(address => uint) private initialFarm; // Farm size at x_0
-    mapping(address => uint) private totalSupply_initial; // totalSupply at x_0
+    mapping(address => uint) public initialFarm; // Farm size at x_0
+    mapping(address => uint) public totalSupply_initial; // totalSupply at x_0
 
     function NudgeGeeseInHub(uint amount) public safe returns (bool)
     {
@@ -549,6 +554,23 @@ contract Coinbird is ferocious, feathery
             participatedFarm[msg.sender] = true;
         }
         HarvestGoldenEggs();
+        require((balances[msg.sender] + myHubGeese(msg.sender)) >= amount, "not enough HONK");
+        balances[msg.sender] += myHubGeese(msg.sender) - amount;
+        balances[Securities] -= myHubGeese(msg.sender) + amount;
+        myGooseFarm[msg.sender] = amount;
+        totalSupply_initial[msg.sender] = TotalSupply;
+        emit Transfer(msg.sender, Securities, amount);
+        return true;
+    }
+
+    function NudgeGeeseInHub2(uint amount) public safe returns (bool)
+    {
+        if(participatedFarm[msg.sender] == false)
+        {
+            FarmGeese.push(msg.sender);
+            participatedFarm[msg.sender] = true;
+        }
+        HarvestGoldenEggs2();
         require((balances[msg.sender] + myHubGeese(msg.sender)) >= amount, "not enough HONK");
         balances[msg.sender] += myHubGeese(msg.sender) - amount;
         balances[Securities] -= myHubGeese(msg.sender) + amount;
@@ -573,6 +595,16 @@ contract Coinbird is ferocious, feathery
     }
 
     function HarvestGoldenEggs() public safe returns (bool)
+    {
+        uint dummy = GoldenGoose(msg.sender);
+        initialFarm[msg.sender] = FarmGoose;
+        balances[Farm] -= dummy;
+        balances[msg.sender] += dummy;
+        emit Transfer(Farm, msg.sender, dummy);
+        return true;
+    }
+
+    function HarvestGoldenEggs2() public returns (bool)
     {
         uint dummy = GoldenGoose(msg.sender);
         initialFarm[msg.sender] = FarmGoose;
