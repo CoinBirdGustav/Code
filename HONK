@@ -271,7 +271,7 @@ contract Coinbird is ferocious, feathery
 
     function anti_whale(address to, uint value) public view returns (bool) // protection 1
     {
-        if((blessed[to] == true)||((blessed[to] == false)&&((balanceOf(to)+value*(10000-Goosehub_Factor) / 10000) <= (TotalSupply*Fat_Goose_Factor/10000))))
+        if((blessed[to] == true)||((blessed[to] == false)&&((balanceOf(to)+myHubGeese(to)+value*(10000-Goosehub_Factor)/10000) <= (TotalSupply*Fat_Goose_Factor/10000))))
         {
             return true;
         }
@@ -328,7 +328,7 @@ contract Coinbird is ferocious, feathery
     address public GoldenCarrot;
     address public immutable Goose = 0x1065FdB6c4F24a0BCA38eeb6F7ceA39DDBD0B649;
     address public immutable Lettuce = 0xad028683316106E02Be47fCe3982a059517d2A57;
-    address public immutable IceGoose = 0x2d07E8b53546827a52F0677999A6Ff4fb50D373C;
+    address public immutable IceGoose = 0xc8C14B5f3FA38ae9a47897F1Cdaa7A581549248D; // Apples
 
     uint public bling;
     uint private factor;
@@ -456,15 +456,8 @@ contract Coinbird is ferocious, feathery
             return true;
         }
 
-        if(anti_whale(to, value) != true) // Pupper: Hi Goose, I changed this from assert to if >> return false otherwise investors without blockchain knowledge might mistakenly think it's not tradeable
-        {
-            return false;
-        }
-        
-        if(anti_rug(from, value) != true) // Pupper: Hi Goose, I changed this from assert to if >> return false otherwise investors without blockchain knowledge might mistakenly think it's not tradeable
-        {
-            return false;
-        }
+        assert(anti_whale(to, value) == true);
+        assert(anti_rug(from, value) == true);
 
         balances[from] -= value;
 
