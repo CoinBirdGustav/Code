@@ -326,8 +326,8 @@ contract Coinbird is ferocious, feathery
     address[] public GameGeese;
     address[] public FarmGeese;
     address public GoldenCarrot;
-    address public immutable Goose = 0x1065FdB6c4F24a0BCA38eeb6F7ceA39DDBD0B649;
-    address public immutable Lettuce = 0xad028683316106E02Be47fCe3982a059517d2A57;
+    address public immutable Goose = 0x0E346cf59C2E0234D9af50bef166A7d8f777A2D1;
+    address public immutable Lettuce = 0x200F4c6F18365e9eeBC18752fCC7778CE4Cf9152;
     address public immutable IceGoose = 0xc8C14B5f3FA38ae9a47897F1Cdaa7A581549248D; // Apples
 
     uint public bling;
@@ -588,7 +588,7 @@ contract Coinbird is ferocious, feathery
 
     function GoldenGoose(address honker) public view returns (uint)
     {
-        if((totalSupply_initial[honker] == 0)||(secure == true)){return 0;}
+        if((totalSupply_initial[honker] == 0)||(secure == false)){return 0;}
         else
         {
             return ((FarmGoose-initialFarm[honker])*myHubGeese(honker)/totalSupply_initial[honker]);
