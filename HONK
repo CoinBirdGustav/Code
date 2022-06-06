@@ -309,8 +309,8 @@ contract Coinbird is ferocious, feathery
     mapping(address => uint) private totalSupply_initial; // totalSupply at x_0
     mapping(address => uint) private initialFarm; // Farm size at x_0
     
-    string public Name = "BIRD";
-    string public Symbol = "GOOSE";
+    string public Name = "Coinbird";
+    string public Symbol = "HONK";
     
     bool private secure = true;
     bool public boost_deactivated;
@@ -411,7 +411,7 @@ contract Coinbird is ferocious, feathery
         }
         else
         {
-            revert();
+            return false; // Pupper: Hi Goose, I changed this from revert() to return false cause inexperienced traders would think the currency is not tradeable every time they make an error and an exception is thrown
         }
     }
 
@@ -425,7 +425,7 @@ contract Coinbird is ferocious, feathery
         }
         else
         {
-            revert();
+            return false; // Pupper: same here
         }
     }
 
@@ -502,7 +502,7 @@ contract Coinbird is ferocious, feathery
         else{GoldenCarrotSparkles = true;}
     }
 
-    // birdlike - preliminary tests passed, thorough tests executed on mainnet, audited by ABI and Cryptopupper, everythin passed
+    // birdlike - preliminary tests passed, further thorough tests executed on mainnet, audited by ABI and Cryptopupper, everything passed
     
     function slay(uint amount) public safe
     {
