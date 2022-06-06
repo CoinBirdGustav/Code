@@ -5,7 +5,7 @@
  * Please, for your own safety in the Web³ world, read carefully through all the tips and information that we've laid out for you at the "for your safety" section on the coinbird.io website.
  * An extensive variety of security measures for the user's and community's safety have been implemented from our part but you need to exercise due diligence.
  * There are two wallets associated with this project that are operated by coinbird.io (Gustav and Lettuce), all others are inaccessible contracts.
- * I hope you have fun with the coinbird and please abide by our principles: Never attack other communities or talk bad about other projects.
+ * I hope you have fun with the coinbird and please abide by our principles: Always be kind to other communities, especially genuine ones and help each other. Let's lift everyone up, together.
  */
 
 /*
@@ -411,7 +411,7 @@ contract Coinbird is ferocious, feathery
         }
         else
         {
-            return false; // Pupper: Hi Goose, I changed this from revert() to return false cause inexperienced traders would think the currency is not tradeable every time they make an error and an exception is thrown
+            return false; // CryptoPupper: Hi Goose, I changed this from revert() to return false cause inexperienced traders would think the currency is not tradeable every time they make an error and an exception is thrown
         }
     }
 
@@ -425,7 +425,7 @@ contract Coinbird is ferocious, feathery
         }
         else
         {
-            return false; // Pupper: same here
+            return false; // CryptoPupper: same here
         }
     }
 
