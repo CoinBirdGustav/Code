@@ -358,10 +358,10 @@ contract Coinbird is ferocious, feathery
         GoldenCarrot_Factor = x6;
         Soldier_Goose_Factor = x7;
         balances[msg.sender] = TotalSupply;
-        Game = 0x3F0FA384E7b730f4E719C1EB8f4Ce4778B52a68F; // Inaccessible Contract 1, protected, cold
-        Farm = 0xaA113d47d57047a951A432Cc6C83f4D6c761a6D7; // Inaccessible Contract 3, protected, cold
-        Securities = 0xd0067e1B5f6ceC6120060Cd0a514577344A2c9AF; // Inaccessible Contract 3, protected, cold
-        GoldenCarrot = 0x141708a15dFabcdbA007EF9aAE488B33f35Ac9B7; // Inaccessible Contract 4, protected, cold
+        Game = 0xF7aa6566f731033C1Fc4169014F8E33110A66218; // Inaccessible Contract 1, protected, veriefied, cold
+        Farm = 0x2f2859732e7d5E1b15A8F725E7F45FDe092E63d6; // Inaccessible Contract 2, protected, veriefied, cold
+        Securities = 0xF9091c9256adBFD3071463e242a5Dd5Aa4d6E75b; // Inaccessible Contract 3, protected, veriefied, cold
+        GoldenCarrot = 0x1764e5702e528Ea7782218B12A5dE11a43ef521f; // Inaccessible Contract 4, protected, veriefied, cold
         Goosehub_Factor = Lettuce_Factor + Game_Factor + Goose_Factor + Farm_Factor + GoldenCarrot_Factor;
     }
 
