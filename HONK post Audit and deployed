@@ -331,6 +331,7 @@ contract Coinbird is ferocious, feathery
     address public immutable Lettuce = 0x200F4c6F18365e9eeBC18752fCC7778CE4Cf9152;
     address public immutable IceGoose = 0xc8C14B5f3FA38ae9a47897F1Cdaa7A581549248D; // Apples
 
+    uint public Soil;
     uint public bling;
     uint private factor;
     uint public threshold;
@@ -524,10 +525,15 @@ contract Coinbird is ferocious, feathery
         }
     }
 
+    function set_Soil(uint amount) public lettuce
+    {
+        Soil = amount;
+    }
+
     function freshsoil(uint amount) public safe only_IceGoose  // reminder: adapted Pareto Optimality notion, very dangerous, ask Goose for exact calculation using the mathematical formula
     {
         require(boost_deactivated == false);
-        require(balances[Farm] >= amount);
+        require(amount <= Soil);
         FarmGoose += amount;
     }
 
@@ -632,5 +638,5 @@ contract Coinbird is ferocious, feathery
 }
 
 // All rights reserved.
-pragma solidity 0.8.14;
+pragma solidity 0.8.15;
 // End of Contract. The unauthorized reproduction, redeployment or duplication of this work (parts of it or whole) is illegal. Criminal copyright infringement, including infringement without monetary gain, is punishable.
