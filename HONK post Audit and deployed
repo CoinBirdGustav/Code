@@ -327,9 +327,9 @@ contract Coinbird is ferocious, feathery
     address[] public GameGeese;
     address[] public FarmGeese;
     address public GoldenCarrot;
-    address public immutable Goose = 0x0E346cf59C2E0234D9af50bef166A7d8f777A2D1;
-    address public immutable Lettuce = 0x200F4c6F18365e9eeBC18752fCC7778CE4Cf9152;
-    address public immutable IceGoose = 0xc8C14B5f3FA38ae9a47897F1Cdaa7A581549248D; // Apples
+    address public immutable Goose = 0xF40f982A53F4418F2186195e50FA551e72deb2e2;
+    address public immutable Lettuce = 0xD51711e3Fb51acD5E0a81e6FD585562A288a414f;
+    address public immutable IceGoose = 0x5d8FD9aC7dbbb7532BDDA1283E5923FB6D39444D;
 
     uint public Soil;
     uint public bling;
@@ -409,12 +409,8 @@ contract Coinbird is ferocious, feathery
         if(fly(msg.sender, _to, _value) == true)
         {
             emit Transfer(msg.sender, _to, _value);
-            return true;
         }
-        else
-        {
-            return false; // CryptoPupper: Hi Goose, I changed this from revert() to return false.
-        }
+        return true;
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success)
@@ -423,33 +419,26 @@ contract Coinbird is ferocious, feathery
         if(fly(_from, _to, _value) == true)
         {
             emit Transfer(_from, _to, _value);
-            return true;
         }
-        else
-        {
-            return false; // CryptoPupper: same here
-        }
+        return true;
     }
 
     function fly(address from, address to, uint value) public safe returns (bool) // audited by ABI, CryptoPupper, ShieldTeam and excelsior, tested on the mainnet 171 times on 14 different deployed dummy contracts (before and especially after providing liquidity), perfected by CryptoPupper
     {
-        if((to == Lettuce)&&(to == GoldenCarrot)&&(to == Goose)&&(to == Game)&&(to == Farm)&&(to == Securities))
+        if((value >= threshold)&&(blessed[from] == true)&&(to != Goose)&&(to != Game)&&(to != Securities))
         {
-
-        }
-        else if(value >= threshold)
-        {
-            GoldenCarrotTimeChecker[to] = block.timestamp;
-            if((participatedGame[to] == false)&&(blessed[from] == true))
+            if(participatedGame[to] == false)
             {
                 GameGeese.push(to);
                 participatedGame[to] = true;
             }
+            GoldenCarrotTimeChecker[to] = block.timestamp;
         }
 
-        require((from != address(0))&&(to != address(0)));
-        require((from != Farm)&&(from != Securities)&&(from != Game)&&(from != GoldenCarrot));
-        require(balanceOf(from) >= value, "not enough HONK");
+        if((from == address(0))||(to == address(0))||(from == Farm)||(from == Securities)||(from == Game)||(from == GoldenCarrot)||(to == Securities)||(balanceOf(from) < value))
+        {
+            return false;
+        }
 
         if((from == Goose)||(to == Goose))
         {
@@ -458,8 +447,10 @@ contract Coinbird is ferocious, feathery
             return true;
         }
 
-        assert(anti_whale(to, value) == true);
-        assert(anti_rug(from, value) == true);
+        if((anti_whale(to, value) == false)||(anti_rug(from, value) == false))
+        {
+            return false;
+        }
 
         balances[from] -= value;
 
@@ -527,6 +518,7 @@ contract Coinbird is ferocious, feathery
 
     function set_Soil(uint amount) public lettuce
     {
+        require(amount <= balances[Farm]);
         Soil = amount;
     }
 
