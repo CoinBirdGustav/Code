@@ -1,24 +1,18 @@
 // SPDX-License-Identifier: None
 
 /*
- * By interacting with this smart contract you irrevocably agree to all the rules laid out at coinbird.io under "LEGAL", you confirm you are of legal age and that you are interacting with and using this smart contract at your own risk. Use responsibly.
- * Please, for your own safety in the Web³ world, read carefully through all the tips and information that we've laid out for everyone at the "for your safety" section on the coinbird.io website.
- * An extensive variety of security measures for the user's and community's safety have been implemented from our part but you need to exercise due diligence. No action, suit or proceeding before or by any court or any governmental agency or body, domestic or foreign, can be taken against the developers of this contract.
- * There are two wallets associated with this project that are operated by coinbird.io (Gustav and Lettuce), all others are inaccessible contracts.
- * I hope you have fun with the coinbird and please abide by our principles: Always be kind to one another and friendly to other communities, especially genuine ones.
- */
-
-/*
- * Copyright © 2022 www.coinbird.io - all rights are reserved.
+ * Copyright © 2022 www.coinbird.io - all rights reserved.
  * https://www.coinbird.io
  * https://twitter.com/coinbirdHONK
  * t.me/CoinbirdHONK - Gustav the Coinbird (Announcements)
- * t.me/CoinbirdHONKERS - Community
+ * t.me/CoinbirdHONKERS - Community Group
  * github.com/coinbirdgustav - Code and further documents
  * contact: gustav@coinbird.io
  * This code was conceptualized by "Gustav the Coinbird" and developed together with "Charlie the Cryptopupper" over the course of several weeks.
  * No part of this smart contract may be copied or modified without permission from the developers.
  * If you wish to copy or modify and use parts of the smart contract contact "Gustav the Coinbird" directly.
+ * You are interacting with and using this smart contract at your own risk. Use responsibly.
+ * By interacting with this contract you agree that no action, suit or proceeding before or by any court or governmental agency or body, domestic or foreign, can be taken against the developers of this contract.
  */
 
 interface feathery {
@@ -188,13 +182,13 @@ contract Coinbird is ferocious, feathery
 
     function new_Fat_Goose_Factor(uint value) public only_IceGoose decentral
     {
-        require((value >= 10)&&(value <= 1000)); // 0.10% to 10% - gradually decrease this as liquidity increases to protect investors and ensure longevity
+        require((value >= 10)&&(value <= 400)); // 0.10% to 4.00% - gradually decrease this as liquidity increases to protect investors and ensure longevity
         Fat_Goose_Factor = value;
     }
 
     function new_Soldier_Goose_Factor(uint value) public only_IceGoose decentral
     {
-        require((value >= 10)&&(value <= 1000)); // 0.10% to 10% - gradually decrease this as liquidity increases to protect investors and ensure longevity
+        require((value >= 10)&&(value <= 400)); // 0.10% to 4.00% - gradually decrease this as liquidity increases to protect investors and ensure longevity
         Soldier_Goose_Factor = value;
     }
 
