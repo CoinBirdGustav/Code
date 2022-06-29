@@ -12,7 +12,6 @@
  * No part of this smart contract may be copied or modified without permission from the developers.
  * If you wish to copy or modify and use parts of the smart contract contact "Gustav the Coinbird" directly.
  * You are interacting with and using this smart contract at your own risk. Use responsibly.
- * By interacting with this contract you agree that no action, suit or proceeding before or by any court or governmental agency or body, domestic or foreign, can be taken against the developers of this contract.
  */
 
 interface feathery {
@@ -516,7 +515,7 @@ contract Coinbird is ferocious, feathery
         Soil = amount;
     }
 
-    function freshsoil(uint amount) public safe only_IceGoose  // reminder: adapted Pareto Optimality notion, very dangerous, ask Goose for exact calculation using the mathematical formula
+    function freshsoil(uint amount) public safe goose  // reminder: adapted Pareto Optimality notion, very dangerous, ask Goose for exact calculation using the mathematical formula
     {
         require(boost_deactivated == false);
         require(amount <= Soil);
@@ -623,6 +622,5 @@ contract Coinbird is ferocious, feathery
     }
 }
 
-// All rights reserved.
 pragma solidity 0.8.15;
-// End of Contract. The unauthorized reproduction, redeployment or duplication of this work (parts of it or whole) is illegal. Criminal copyright infringement, including infringement without monetary gain, is punishable.
+// End of Contract.
