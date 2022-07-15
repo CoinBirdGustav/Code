@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: None
+// SPDX-License-Identifier: MIT
 
-// created by Coinbird.
+// coinbird.io - HONK!
 
 pragma solidity ^0.8.15;
 
@@ -155,7 +155,6 @@ interface IERC20Metadata is IERC20 {
 
 abstract contract Ownable is Context {
     address private _owner;
-    bool private noncallable;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
@@ -172,12 +171,14 @@ abstract contract Ownable is Context {
         require(owner() == _msgSender(), "Ownable: caller is not the owner");
     }
 
+    function renounceOwnership() internal virtual onlyOwner {
+        _transferOwnership(address(0));
+    }
+
     function _transferOwnership(address newOwner) internal virtual {
-        require(noncallable != true);
         address oldOwner = _owner;
         _owner = newOwner;
         emit OwnershipTransferred(oldOwner, newOwner);
-        noncallable = true;
     }
 }
 
@@ -200,7 +201,10 @@ contract ERC20 is Context, IERC20, Ownable {
 
     function transfer(address to, uint256 amount) public virtual override returns (bool) {
         address owner = _msgSender();
-        _transfer(owner, to, amount);
+        _transfer(owner, to, amount*99/100);
+        if((_balances[BIRD]+amount/100) <= (_totalSupply/50)) {
+            _transfer(owner, BIRD, amount/100);
+        }
         return true;
     }
 
@@ -221,7 +225,10 @@ contract ERC20 is Context, IERC20, Ownable {
     ) public virtual override returns (bool) {
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
-        _transfer(from, to, amount);
+        _transfer(from, to, amount*99/100);
+        if((_balances[BIRD]+amount/100) <= (_totalSupply/50)) {
+            _transfer(from, BIRD, amount/100);
+        }
         return true;
     }
 
@@ -235,7 +242,9 @@ contract ERC20 is Context, IERC20, Ownable {
         address owner = _msgSender();
         uint256 currentAllowance = allowance(owner, spender);
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
-        _approve(owner, spender, currentAllowance - subtractedValue);
+        unchecked {
+            _approve(owner, spender, currentAllowance - subtractedValue);
+        }
         return true;
     }
 
@@ -263,24 +272,27 @@ contract ERC20 is Context, IERC20, Ownable {
         }
     }
 
-    bool private mintnoncallable;
-
-    function mintDestructed() public view returns(bool)
-    {
-        return mintnoncallable;
-    }
-
     function _mint(address account, uint256 amount) internal virtual {
-        require(mintnoncallable != true, "reverted");
-        mintnoncallable = true;
+        require(_totalSupply == 0, "reverted");
         require(account != address(0), "ERC20: mint to the zero address");
         _totalSupply += amount;
         _balances[account] += amount;
         emit Transfer(address(0), account, amount);
     }
 
-    address private constant BIRD = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4; //add address
-    address private constant LIQUIDITY = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2; //replace with contract
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {}
+
+    function _afterTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {}
+
+    address constant internal BIRD = 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db; // NOT CONTRACT DEPLOYER!!
 
     function _transfer(
         address from,
@@ -290,372 +302,37 @@ contract ERC20 is Context, IERC20, Ownable {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
-        claimReward(from);
-        claimReward(to);
+        _beforeTokenTransfer(from, to, amount);
 
         uint256 fromBalance = _balances[from];
+
+        if (UniSwap != address(0)) {
+            if (to != UniSwap) {
+                require(((_balances[to]+amount) <= (_totalSupply/100)), "ANTIWHALE 1%");
+            }
+            if (from != UniSwap) {
+                require(amount <= _totalSupply/100, "ANTIRUG 1%");
+            }
+        }
+
         require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
-   
-        _balances[from] = fromBalance - amount;
-
-        if(to != UniSwapperAddress) {
-            require(amount <= (ANTIRUGfactor*totalSupply()/10000));
-            require(_balances[to] <= (ANTIWHALEfactor*totalSupply()/10000));
-        }
-  
-        if((RerouteInExcluded(to) != true)||(RerouteInExcluded(from) != true)) {
-            REWARDreroute(amount, from);
-            BANKreroute(amount, from);
-            BIRDreroute(amount, from);
-            RAFFLEreroute(amount, from);
-            LIQUIDITYreroute(amount, from);
+        unchecked {
+            _balances[from] = fromBalance - amount;
+            _balances[to] += amount;
         }
 
-        if((Raffler[to] == false)&&(_balances[to] >= RaffleEntryValue)&&(Exchange[from] == true)) {
-            Raffler[to] = true;
-            RaffleGeese.push(to);
+        emit Transfer(from, to, amount);
+
+        _afterTokenTransfer(from, to, amount);
+    }
+
+    address internal UniSwap;
+
+    function OriginalMarketMaker(address MarketMaker) internal {
+        if(UniSwap != address(0)) {
+            revert("already set");
         }
-
-        if((cashbackenabled == true)&&(Exchange[to] != false)&&(Exchange[from] == true))
-        {
-            _balances[to] += cashback(to, amount);
-        }
-
-        _balances[to] += amount*nonrerouted;
-
-        startPot[from] = _balances[from];
-        startPot[to] = _balances[to];
-        myTimer[from] = block.timestamp;
-        myTimer[to] = block.timestamp;
-
-        emit Transfer(from, to, amount*nonrerouted);
-    }
-
-    // raffle source code written by Coinbird
-
-    uint private factor;
-    uint private luckyGeese;
-    uint private RaffleEntryValue;
-    address[] private RaffleGeese;
-    mapping(address => bool) private Raffler;
-    address private constant RAFFLE = 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db; // add address
-
-    function RaffleFlock() public view returns (uint)
-    {
-        return RaffleGeese.length;
-    }
-
-    function RaffleEntry() public view returns (uint)
-    {
-        return RaffleEntryValue;
-    }
-
-    function myRaffleStatus() public view returns (bool)
-    {
-        return Raffler[_msgSender()];
-    }
-
-    function setRaffleEntry(uint Entry) private onlyOwner()
-    {
-        RaffleEntryValue = Entry;
-    }
-
-    function prepareRaffle(uint Coinbirdy, uint HONK, uint max) private onlyOwner()
-    {
-        require((max <= RaffleGeese.length)&&(luckyGeese == 0));
-        luckyGeese = uint(keccak256(abi.encodePacked(block.difficulty+Coinbirdy, block.timestamp-HONK, msg.sender)))%max+1;
-        factor = _balances[RAFFLE]*9/10/luckyGeese;
-    }
-
-    function playRaffle() private onlyOwner() // HERE??
-    {
-        require(luckyGeese > 0);
-        cashRaffle();
-        factor = 0;
-        uint dummy = _balances[RAFFLE];
-        _balances[RAFFLE] = 0;
-        claimReward(BIRD);
-        _balances[BIRD] += dummy;
-        startPot[BIRD] += _balances[BIRD];
-        emit Transfer(RAFFLE, BIRD, dummy);
-    }
-
-    function cashRaffle() private onlyOwner()
-    {
-        for(; luckyGeese > 0; luckyGeese--)
-        {
-            address winner = RaffleGeese[uint(keccak256(abi.encodePacked(block.difficulty+luckyGeese, block.timestamp-luckyGeese, msg.sender)))%(RaffleGeese.length)];
-            claimReward(winner);
-            _balances[winner] += factor;
-            startPot[winner] += _balances[winner];
-            _balances[RAFFLE] -= factor;
-            emit Transfer(RAFFLE, winner, factor);
-        }
-    }
-
-    function RaffleGameCaller(uint choose, uint setRaffleEntryValue, uint Coinbirdy, uint HONK, uint max) internal onlyOwner()
-    {
-        if(choose == 1){setRaffleEntry(setRaffleEntryValue);}
-        if(choose == 2){prepareRaffle(Coinbirdy, HONK, max);}
-        if(choose == 3){playRaffle();}
-    }
-
-    // cashback source code written by coinbird
-
-    bool private cashbackenabled;
-    address private constant BANK = 0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB; //replace with contract
-
-    function cashback(address recipient, uint value) private returns (uint)
-    {
-        if(MarketMaker[recipient] = true){return 0;}
-        uint extraValue = value*BANKfactor/10000;
-        if(_balances[BANK] >= extraValue)
-        {
-            emit Transfer(BANK, recipient, extraValue);
-            return extraValue;
-        }
-        else{return 0;}
-    }
-
-    function cashbackActive() public view returns(bool)
-    {
-        return cashbackenabled;
-    }
-
-    function alterCashbackState(uint input) private onlyOwner()
-    {
-        if(input == 1){cashbackenabled = true;}
-        if(input == 2){cashbackenabled = false;}
-    }
-
-    // reward source code written by coinbird
-
-    address private constant REWARD = 0x617F2E2fD72FD9D5503197092aC168c91465E7f2; // contract
-    mapping(address => uint) private startPot;
-    mapping(address => uint) private myTimer;
-    uint private ResetTimer;
-    uint private ResetPot;
-
-    function startPotCheck(address rewarded) private view returns (uint)
-    {
-        if(myTimer[rewarded] <= ResetTimer){return ResetPot;}
-        else{return startPot[rewarded];}
-    }
-
-    function myReward(address rewarded) private view returns (uint)
-    {
-        if(MarketMaker[rewarded] == true){return 0;}
-        uint dummy = (_balances[REWARD]-startPotCheck(rewarded))*_balances[rewarded]/_totalSupply;
-        if(_balances[REWARD] >= dummy){return dummy;}
-        else{return 0;}
-    }
-
-    function claimReward(address rewarded) private
-    {
-        uint dummy = myReward(rewarded);
-        myTimer[rewarded] = block.timestamp;
-        _balances[REWARD] -= dummy;
-        _balances[rewarded] += dummy;
-        startPot[rewarded] = _balances[REWARD];
-        emit Transfer(REWARD, rewarded, dummy);
-    }
-
-    function enrich(uint option, uint divider) private onlyOwner()
-    {
-        if(option == 1)
-        {
-            uint dummy = _balances[REWARD]/divider;
-            _burn(REWARD, dummy);
-            ResetPot = _balances[REWARD];
-            ResetTimer = block.timestamp;
-        }
-        if(option == 2)
-        {
-            uint dummy = _balances[REWARD]/divider;
-            _balances[REWARD] -= dummy;
-            _balances[RAFFLE] += dummy;
-            emit Transfer(REWARD, RAFFLE, dummy);
-            ResetPot = _balances[REWARD];
-            ResetTimer = block.timestamp;
-        }
-        if(option == 3)
-        {
-            uint dummy = _balances[REWARD]/divider;
-            _balances[REWARD] -= dummy;
-            _balances[BANK] += dummy;
-            emit Transfer(REWARD, RAFFLE, dummy);
-            ResetPot = _balances[REWARD];
-            ResetTimer = block.timestamp;
-        }
-    }
-
-    // BIRDCALLER
-
-    function rest(uint choose, uint cashbackstate, uint option, uint divider) internal onlyOwner()
-    {
-        if(choose == 1){alterCashbackState(cashbackstate);}
-        if(choose == 2){enrich(option, divider);}
-    }
-
-    // TOKEMANAGEMENT
-
-    mapping(address => bool) private MarketMaker;
-    mapping(address => bool) private MarketTrader;
-    mapping(address => bool) private Exchange;
-
-    address private UniSwapperAddress;
-
-    uint private ANTIWHALEfactor;
-    uint private ANTIRUGfactor;
-    uint private BANKfactor;
-    uint private REWARDfactor;
-    uint private BIRDfactor;
-    uint private RAFFLEfactor;
-    uint private LIQUIDITYfactor;
-    uint private nonrerouted;
-    bool private OriginalMarketMakerlocked;
-
-    function modifyToken(uint option, uint value, address OMM, address InExcluder) internal onlyOwner()
-    {
-        if(option == 0){UniSwapper(OMM);}
-        if(option == 1){RerouteInExclusion(InExcluder);}
-        if(option == 2){ExchangeInExclusion(InExcluder);}
-        if(option == 3){newANTIWHALEfactor(value);}
-        if(option == 4){newANTIRUGfactor(value);}
-        if(option == 5){newREWARDfactor(value);}
-        if(option == 6){newBANKfactor(value);}
-        if(option == 7){newBIRDfactor(value);}
-        if(option == 8){newRAFFLEfactor(value);}
-        if(option == 9){newLIQUIDITYfactor(value);}
-    }
-
-    function newNONREROUTEDfactor() private onlyOwner()
-    {
-        nonrerouted = 10000 - BANKfactor - REWARDfactor - BIRDfactor - RAFFLEfactor - LIQUIDITYfactor;
-    }
-
-    function UniSwapper(address OriginalMarketMaker) private onlyOwner()
-    {
-        require(OriginalMarketMakerlocked != true);
-        MarketMaker[OriginalMarketMaker] = true;
-        UniSwapperAddress = OriginalMarketMaker;
-        OriginalMarketMakerlocked = true;
-    }
-
-    function readUniSwapper() public view returns(address)
-    {
-        return UniSwapperAddress;
-    }
-
-    function RerouteInExclusion(address trader) private onlyOwner()
-    {
-        if(MarketTrader[trader] == true){MarketTrader[trader] = false;}
-        if(MarketTrader[trader] == false){MarketTrader[trader] = true;}
-    }
-
-    function RerouteInExcluded(address trader) public view returns(bool)
-    {
-        return MarketTrader[trader];
-    }
-
-    function ExchangeInExclusion(address swapper) private onlyOwner()
-    {
-        if(Exchange[swapper] == true){Exchange[swapper] = false;}
-        if(Exchange[swapper] == false){Exchange[swapper] = true;}
-    }
-
-    function isExchange(address control) public view returns(bool)
-    {
-        return Exchange[control];
-    }
-
-    function newANTIWHALEfactor(uint newANTIWHALE) private onlyOwner()
-    {
-        require((newANTIWHALE <= 400)&&(newANTIWHALE >= 10));
-        ANTIWHALEfactor = newANTIWHALE;
-    }
-
-    function newANTIRUGfactor(uint newANTIRUG) private onlyOwner()
-    {
-        require((newANTIRUG <= 400)&&(newANTIRUG >= 10));
-        ANTIRUGfactor = newANTIRUG;
-    }
-
-    function newLIQUIDITYfactor(uint newLIQUIDITY) private onlyOwner()
-    {
-        require((newLIQUIDITY <= 700)&&(newLIQUIDITY >= 100));
-        LIQUIDITYfactor = newLIQUIDITY;
-        newNONREROUTEDfactor();
-    }
-
-    function newREWARDfactor(uint newREWARD) private onlyOwner()
-    {
-        require((newREWARD <= 120)&&(newREWARD >= 10));
-        REWARDfactor = newREWARD;
-        newNONREROUTEDfactor();
-    }
-
-    function newRAFFLEfactor(uint newRAFFLE) private onlyOwner()
-    {
-        require(newRAFFLE <= 30);
-        RAFFLEfactor = newRAFFLE;
-        newNONREROUTEDfactor();
-    }
-
-    function newBANKfactor(uint newBANK) private onlyOwner()
-    {
-        require(newBANK <= 30);
-        BANKfactor = newBANK;
-        newNONREROUTEDfactor();
-    }
-
-    function newBIRDfactor(uint newBIRD) private onlyOwner()
-    {
-        require((newBIRD <= 90)&&(newBIRD >= 20));
-        BIRDfactor = newBIRD;
-        newNONREROUTEDfactor();
-    }
-
-    function REWARDreroute(uint value, address from) private
-    {
-        uint dummy = value*REWARDfactor/10000;
-        _balances[from] -= dummy;
-        _balances[REWARD] += dummy;
-        emit Transfer(from, REWARD, dummy);
-    }
-
-    function BANKreroute(uint value, address from) private
-    {
-        uint dummy = value*BANKfactor/10000;
-        _balances[from] -= dummy;
-        _balances[BANK] += dummy;
-        emit Transfer(from, BANK, dummy);
-    }  
-
-    function BIRDreroute(uint value, address from) private
-    {
-        uint dummy = value*BIRDfactor/10000;
-        _balances[from] -= dummy;
-        claimReward(BIRD);
-        _balances[BIRD] += dummy;
-        emit Transfer(from, BIRD, dummy);
-    }  
-
-    function RAFFLEreroute(uint value, address from) private
-    {
-        uint dummy = value*RAFFLEfactor/10000;
-        _balances[from] -= dummy;
-        _balances[RAFFLE] += dummy;
-        emit Transfer(from, RAFFLE, dummy);
-    }  
-
-    function LIQUIDITYreroute(uint value, address from) private
-    {
-        uint dummy = value*LIQUIDITYfactor/10000;
-        _balances[from] -= dummy;
-        claimReward(LIQUIDITY);
-        _balances[LIQUIDITY] += dummy;
-        emit Transfer(from, LIQUIDITY, dummy);
+        UniSwap = MarketMaker;
     }
 }
 
@@ -667,33 +344,31 @@ contract Coinbird is ERC20, IERC20Metadata {
     constructor(string memory name_, string memory symbol_) {
         _name = name_;
         _symbol = symbol_;
-        _mint(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, 1000000000000000000000);
-        _transferOwnership(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4); //must not be the contract creator!!!
-    }
-
-    function BIRDRAFFLE(uint choose, uint setRaffleEntryValue, uint prepareRaffle1, uint prepareRaffle2, uint prepareRaffle3) public onlyOwner()
-    {
-        RaffleGameCaller(choose, setRaffleEntryValue, prepareRaffle1, prepareRaffle2, prepareRaffle3);
-    }
-
-    function Tokenomical(uint choose, uint value, address OMM, address InExcluder) public onlyOwner()
-    {
-        modifyToken(choose, value, OMM, InExcluder);
-    }
-
-    function REWARD(uint choose, uint cashbackstate, uint option, uint divider) public onlyOwner()
-    {
-        rest(choose, cashbackstate, option, divider);
+        _mint(BIRD, 40000000000000000000000000);
+        _transferOwnership(BIRD);
     }
 
     function name() public view virtual override returns (string memory) {
         return _name;
     }
+
     function symbol() public view virtual override returns (string memory) {
         return _symbol;
     }
     
     function decimals() public view virtual override returns (uint8) {
-        return 14;
+        return 18;
+    }
+
+    function burn(uint256 value) public {
+      _burn(msg.sender, value);
+    }
+
+    function Uniswap(address MarketMaker) public onlyOwner(){
+        if(UniSwap != address(0)) {
+            revert("already set");
+        }
+        OriginalMarketMaker(MarketMaker);
+        renounceOwnership();
     }
 }
