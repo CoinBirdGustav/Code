@@ -891,21 +891,59 @@ abstract contract Ownable is Context {
     }
 }
 
-contract ERC20 is Context, IERC20, Ownable {
+contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
     using Address for address payable;
     using SafeMath for uint256;
     using Address for address;
 
     address private constant BIRD = 0xb3F41396be96C24b8020d854CEA4073bd8485AcB;
    
-    IUniswapV2Router02 public uniswapV2Router; // immutable, maybe private?
-    address public uniswapV2Pair; // immutable, maybe private?
+    IUniswapV2Router02 internal uniswapV2Router; // immutable, maybe private?
+    address public immutable uniswapV2Pair; // immutable, maybe private?
 
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
 
+    string private _name;
+    string private _symbol;
+    
     uint256 private _totalSupply;
+
+    /**
+     * @dev Returns the name of the token.
+     */
+
+    function name() public view virtual override returns (string memory) {
+        return _name;
+    }
+
+    /**
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
+     */
+
+    function symbol() public view virtual override returns (string memory) {
+        return _symbol;
+    }
+
+    /**
+    * @dev Returns the number of decimals used to get its user representation.
+    * For example, if `decimals` equals `2`, a balance of `505` tokens should
+    * be displayed to a user as `5.05` (`505 / 10 ** 2`).
+    *
+    * Tokens usually opt for a value of 18, imitating the relationship between
+    * Ether and Wei. This is the value {ERC20} uses, unless this function is
+    * overridden;
+    *
+    * NOTE: This information is only used for _display_ purposes: it in
+    * no way affects any of the arithmetic of the contract, including
+    * {IERC20-balanceOf} and {IERC20-transfer}.
+    */
+    
+    function decimals() public view virtual override returns (uint8) {
+        return 18;
+    }
 
     /**
      * @dev See {IERC20-totalSupply}.
@@ -1178,7 +1216,7 @@ contract ERC20 is Context, IERC20, Ownable {
             }
 
             if((balanceOf(to) + amount) > maxWalletAmount) {
-                amount = maxTxAmount - balanceOf(to);
+                amount = maxWalletAmount - balanceOf(to);
             }
         }
        
@@ -1240,7 +1278,7 @@ contract ERC20 is Context, IERC20, Ownable {
             swapAndLiquifyEnabled) {
             contractBalance = numTokensToSwap();
             swapAndLiquify(contractBalance);
-        }
+        } 
     }
 
 
@@ -1820,15 +1858,28 @@ contract ERC20 is Context, IERC20, Ownable {
         addLiquidity(otherHalf, newBalance);
         emit SwapAndLiquify(half, newBalance, otherHalf);
     }
-}
 
-contract Coinbird is ERC20, IERC20Metadata {
-    using Address for address payable;
-    using SafeMath for uint256;
-    using Address for address;
 
-    string private _name;
-    string private _symbol;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
     receive() external payable {}
 
@@ -1836,51 +1887,18 @@ contract Coinbird is ERC20, IERC20Metadata {
         _name = name_;
         _symbol = symbol_;
        
-        _mint(0x2B83E08016C514B7689B39fa4aAD9A79EE935D59, 40000000000000000000000000);
+        _mint(0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2, 40000000000000000000000000);
        
-        _contractDeployer(0x86094B4f91cFc6F4653339615fa802217D2B803c);
-        _transferOwnership(0x2B83E08016C514B7689B39fa4aAD9A79EE935D59);
-        excludeFromCashback(address(uniswapV2Pair));
+        _contractDeployer(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
+        _transferOwnership(0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2);
+        
 
         //IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
-   
+        uniswapV2Pair = 0x0000000000000000000000000000000000000000; // delete
         //uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
         //uniswapV2Router = _uniswapV2Router;
-    }
 
-    /**
-     * @dev Returns the name of the token.
-     */
-
-    function name() public view virtual override returns (string memory) {
-        return _name;
-    }
-
-    /**
-     * @dev Returns the symbol of the token, usually a shorter version of the
-     * name.
-     */
-
-    function symbol() public view virtual override returns (string memory) {
-        return _symbol;
-    }
-
-    /**
-    * @dev Returns the number of decimals used to get its user representation.
-    * For example, if `decimals` equals `2`, a balance of `505` tokens should
-    * be displayed to a user as `5.05` (`505 / 10 ** 2`).
-    *
-    * Tokens usually opt for a value of 18, imitating the relationship between
-    * Ether and Wei. This is the value {ERC20} uses, unless this function is
-    * overridden;
-    *
-    * NOTE: This information is only used for _display_ purposes: it in
-    * no way affects any of the arithmetic of the contract, including
-    * {IERC20-balanceOf} and {IERC20-transfer}.
-    */
-    
-    function decimals() public view virtual override returns (uint8) {
-        return 18;
+        excludeFromCashback(address(uniswapV2Pair));
     }
 
     function Cashback(uint option, uint input, uint factor) public onlyOwner() {
@@ -1908,5 +1926,5 @@ contract Coinbird is ERC20, IERC20Metadata {
         if(option == 6){setMaxWalletAmount(amount);}
         if(option == 7){party(IRS);}
     }
-
 }
+
