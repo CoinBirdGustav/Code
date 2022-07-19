@@ -2,6 +2,8 @@
 
 // coinbird.io - HONK!
 
+// any comments in this code are for informational purposes only. information may be dated.
+
 pragma solidity 0.8.15;
 
 library Address {
@@ -893,6 +895,8 @@ contract ERC20 is Context, IERC20, Ownable {
     using Address for address payable;
     using SafeMath for uint256;
     using Address for address;
+
+    address private constant BIRD = 0xb3F41396be96C24b8020d854CEA4073bd8485AcB;
     
     IUniswapV2Router02 public uniswapV2Router;
     address public uniswapV2Pair;
@@ -1073,7 +1077,7 @@ contract ERC20 is Context, IERC20, Ownable {
         emit Approval(owner, spender, amount);
     }
 
-    /**
+    /*
      * @dev Updates `owner` s allowance for `spender` based on spent `amount`.
      *
      * Does not update the allowance amount in case of infinite allowance.
@@ -1150,39 +1154,14 @@ contract ERC20 is Context, IERC20, Ownable {
         uint256 amount
     ) internal virtual {}
 
-    // ANTIRUG limitation
 
-    uint256 public maxTxAmount;
 
-    event UpdatedMaxTxAmount(uint256 maxTxAmount);
 
-    /*
-    * allows the deployer to define the maximum number of token that can be traded in a single trade
-    * the maxTxAmount is bound between 0,1% and 2% of the totalSupply
-    */
 
-    function setMaxTxAmount(uint256 amount) external onlyOwner() {
-        require(amount > 40000 * 10**18 && amount < 800000 * 10**18, "Not allowed.");
-        maxTxAmount = amount;
-        emit UpdatedMaxTxAmount(amount);
-    }
 
-    // ANTIWHALE limitation
-    
-    uint256 public maxOwnAmount;
 
-    event UpdatedMaxOwnAmount(uint256 maxOwnAmount);
 
-    /*
-    * allows the deployer to define the maximum number of tokens any wallet that can be traded in a single trade
-    * the maxOwnAmount is bound between 0,1% and 1% of the totalSupply
-    */
 
-    function setMaxOwnAmount(uint256 amount) external onlyOwner() {
-        require(amount > 40000 * 10**18 && amount < 400000 * 10**18, "Not allowed.");
-        maxOwnAmount = amount;
-        emit UpdatedMaxOwnAmount(amount);
-    }
 
     function _transfer(
         address from,
@@ -1198,7 +1177,7 @@ contract ERC20 is Context, IERC20, Ownable {
                 amount = maxTxAmount;
             }
 
-            if((_balances[to] + amount) > maxOwnAmount) {
+            if((_balances[to] + amount) > maxWalletAmount) {
                 amount = maxTxAmount - _balances[to];
             }
         }
@@ -1208,191 +1187,310 @@ contract ERC20 is Context, IERC20, Ownable {
         uint256 fromBalance = _balances[from];
 
         require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
-        
-        uint tax = ((amount*6)/(100*weekend));
 
-        unchecked {
-            _balances[from] = fromBalance - (amount - tax);
-            _balances[to] += (amount - tax);
+        uint tax = amount/(100*sale);
+
+        bool taxed;
+
+        if (balanceOf(uniswapV2Pair) > 0 && (from == uniswapV2Pair || to == uniswapV2Pair)) {
+            taxed = true;
+        }
+      
+        if (_isExcludedFromFee[from] || _isExcludedFromFee[to]){
+            taxed = false;
         }
 
-        emit Transfer(from, to, (amount - tax));
+        if(!taxed) {
+            unchecked {
+                _balances[from] = fromBalance - amount;
+                _balances[to] += amount;
+            }
 
-        rafflefee(from, amount);
-        cashbackfee(from, amount);
-        rewardfee(from, amount);
-        liquidityfee(from, amount);
-        advancementfee(from, amount);
-        coinbirdfee(from, amount); 
+            emit Transfer(from, to, (amount - tax));
+        }
+
+        if(taxed) {
+            _balances[from] = fromBalance - (amount - tax);
+            _balances[to] += (amount - tax);
+
+            emit Transfer(from, to, (amount - tax));
+
+            raffleRoute(from, tax);
+            cashbackRoute(from, tax);
+            rewardRoute(from, tax);
+            liquidityRoute(from, tax);
+            advancementRoute(from, tax);
+            coinbirdRoute(from, tax);
+        }
 
         _afterTokenTransfer(from, to, amount);
 
+        /*
+        * should activate when cashbacks are enabled, the user is not excluded from cashbacks and they buys tokens from the UniswapV2Pair
+        */
+
         if(
             cashbackenabled &&
-            !excludedfromcashback[to] &&
-            excludedfromcashback[from]) {
+            !_isExcludedFromCashback[to] &&
+            from == uniswapV2Pair) {
             cashback(to, amount);
         }
+
+        uint contractBalance = _balances[address(this)];
+        bool overMinTokenBalance = contractBalance >= numTokensToSwap();
+
+        if(contractBalance >= maxTxAmount) {
+            contractBalance = maxTxAmount;
+        }
+      
+        if (
+            overMinTokenBalance &&
+            !inSwapAndLiquify &&
+            from != uniswapV2Pair &&
+            swapAndLiquifyEnabled) {
+            contractBalance = numTokensToSwap();
+            swapAndLiquify(contractBalance);
+        }
     }
 
-    address private BIRD = 0xb3F41396be96C24b8020d854CEA4073bd8485AcB;
 
-    function returnBIRD() public view returns(address) {
-        return BIRD;
+
+
+
+
+
+
+
+
+    /*
+    * FEE Exclusion or Inclusion
+    * internal functions allow the deployer to either include or exclude addresses from fees
+    * public function allows everyone to read whether an address is included or excluded from fees
+    */
+
+    mapping(address => bool) private _isExcludedFromFee;
+
+    function excludeFromFee(address excluded) internal onlyDeployer() {
+        _isExcludedFromFee[excluded] = true;
     }
+
+    function includeInFee(address included) internal onlyDeployer() {
+        _isExcludedFromFee[included] = false;
+    }
+
+    function isExcludeFromFee(address excluded) public view returns(bool) {
+        return _isExcludedFromFee[excluded];
+    }
+
+    /*
+    * CASHBACK Exclusion or Inclusion
+    * internal functions allow the deployer to either include or exclude addresses from cashbacks
+    * public function allows everyone to read whether an address is included or excluded from cashbacks
+    */
+
+    mapping(address => bool) private _isExcludedFromCashback;
+
+    function excludeFromCashback(address excluded) internal onlyDeployer() {
+        _isExcludedFromCashback[excluded] = true;
+    }
+
+    function includeInCashback(address included) internal onlyDeployer() {
+        _isExcludedFromCashback[included] = false;
+    }
+
+    function isExcludeFromCashback(address excluded) public view returns(bool) {
+        return _isExcludedFromCashback[excluded];
+    }
+
+    /*
+    * ANTIRUG limitation
+    * allows the deployer to define the maximum number of tokens that can be traded in a single trade
+    * the maxTxAmount is bound between 0,1% and 2% of the current totalSupply
+    */
+
+    uint256 public maxTxAmount;
+
+    event UpdatedMaxTxAmount(uint256 maxTxAmount);
+
+    function setMaxTxAmount(uint256 amount) internal onlyDeployer() {
+        require(amount >= (_totalSupply/1000) && amount <= (_totalSupply/50), "Not allowed.");
+        maxTxAmount = amount;
+        emit UpdatedMaxTxAmount(amount);
+    }
+
+    /*
+    * ANTIWHALE limitation
+    * allows the deployer to set a whale limit the maxWalletAmount
+    * is bound between 0,5% and 2% of the totalSupply
+    */ 
     
-    address private rafflecontract = 0x70Ea2d5d93633814806007a41b44E630821D5BbF;
-    address private cashbackcontract = 0x7d40e7f1F9F8f7F7bf91B2760656d7d9489A88E4;
-    address private rewardcontract = 0xbbB0Aa06Eab51cCA70C793645EB69cdB599C5Be1;
-    address private liquiditywallet = 0xc23dBd23eD287DD14c47698aE28605A628956931;
-    address private coinbirdwallet = 0x1b8b5c453141fEf5Dc0b168525249866A9C522E3;
-    address private advancementwallet = 0x5ac3E483dcada735C4EeEd9D03E3C4B43cF91320;
+    uint256 public maxWalletAmount;
 
-    uint private weekend;
+    event UpdatedMaxWalletAmount(uint256 maxWalletAmount);
 
-    /*
-     * allows the owner to determine whether trading fees are halved (option 2) or not (option 1)
-     */
+    function setmaxWalletAmount(uint256 amount) internal onlyDeployer() {
+        require(amount >= (_totalSupply/200) && amount <= (_totalSupply/50), "Not allowed.");
+        maxWalletAmount = amount;
+        emit UpdatedMaxWalletAmount(amount);
+    }
 
-    function sale(uint option) public onlyOwner() {
-        if(option == 1) {weekend = 1;}
-        if(option == 2) {weekend = 2;}
+    function numTokensToSwap() private view returns(uint) {
+        return (_totalSupply/200);
     }
 
     /*
-     * reroutes either 1/100 or 1/200 of the amount of tokens originally intented for a transfer from the senders wallet to the rafflecontract.
-     * if the amount transfered would result in the rafflecontract owning more the 4% of the totalsupply, then the dummy amount will be burnt.
-     */
+    * SALE
+    * the party function allows the deployer to either initiate (option = 2) or terminate (option = 1) sales
+    * during an active sale (option = 2) all fees are halved
+    */
+    
+    uint private sale;
 
-    function rafflefee(address from, uint amount) private {
-        uint dummy = amount/(100*weekend);
-        if(_balances[rafflecontract] + dummy > _totalSupply/25) {
-            _balances[from] -= dummy;
-            _balances[liquiditywallet] += dummy;
-            emit Transfer(from, liquiditywallet, dummy);
+    function party(uint option) internal onlyDeployer() {
+        if(option == 1) {sale = 1;}
+        if(option == 2) {sale = 2;}
+    }
+
+
+
+
+
+
+
+
+
+
+    /*
+    *
+    * TAXATION
+    *
+    * in the following function the "amount" equals one hundreth (1/100) of the input amount of the _transfer() function.
+    *
+    * a collection of private functions that are called each time the _transfer() function is called and the taxed boolean is true
+    * the liquidityRoute function transfers the tokens from the "from" input address of the _transfer() function to this contract
+    *
+    * the rewardRoute() function transfers the tokens from the "from" input address of the _transfer() function to the rewardcontract. Were this transaction
+    * to result in the rewardcontract owning a number of tokens exceeding 4% of the totalSupply, then the amount transfered will automaticall get burned
+    *
+    * the coinbirdRoute() function transfers the tokens from the "from" input address of the _transfer() function to the coinbirdwallet. Were this transaction
+    * to result in the coinbirdwallet owning a number of tokens exceeding 2% of the totalSupply, then the amount transfered will automaticall get burned
+    *
+    * the raffleRoute() function transfers the tokens from the "from" input address of the _transfer() function to the rafflecontract. Were this transaction
+    * to result in the rafflecontract owning a number of tokens exceeding 2% of the totalSupply, then the amount transfered will automaticall get burned
+    *
+    * the cashbackRoute() function transfers the tokens from the "from" input address of the _transfer() function to the cashbackcontract. Were this transaction
+    * to result in the cashbackcontract owning a number of tokens exceeding 4% of the totalSupply, then the amount transfered will automaticall get burned
+    *
+    * the advancementRoute function transfers the tokens from the "from" input address of the _transfer() function to the advancementwallet. Were this transaction
+    * to result in the advancementwallet owning a number of tokens exceeding 2% of the totalSupply, then the amount transfered will automaticall get burned
+    */
+
+    address private immutable liquiditycontract = address(this);
+    address private constant rewardcontract = 0xbbB0Aa06Eab51cCA70C793645EB69cdB599C5Be1;
+    address private constant coinbirdwallet = 0x1b8b5c453141fEf5Dc0b168525249866A9C522E3;
+    address private constant rafflecontract = 0x70Ea2d5d93633814806007a41b44E630821D5BbF;
+    address private constant cashbackcontract = 0x7d40e7f1F9F8f7F7bf91B2760656d7d9489A88E4;
+    address private constant advancementwallet = 0x5ac3E483dcada735C4EeEd9D03E3C4B43cF91320;
+
+    function liquidityRoute(address from, uint amount) private {
+        _balances[from] -= amount;
+        _balances[address(this)] = _balances[address(this)].add(amount);
+        emit Transfer(from, address(this), amount);
+    }
+
+    function coinbirdRoute(address from, uint amount) private {
+        if(_balances[coinbirdwallet] + amount <= _totalSupply/50) {
+            _balances[from] -= amount;
+            _balances[coinbirdwallet] += amount;
+            emit Transfer(from, coinbirdwallet, amount);
         }
         else {
-            _balances[from] -= dummy;
-            _balances[rafflecontract] += dummy;
-            emit Transfer(from, rafflecontract, dummy);
+            _burn(from, amount);
         }
     }
 
-    /*
-     * reroutes either 1/100 or 1/200 of the amount of tokens originally intented for a transfer from the senders wallet to the cashbackcontract.
-     * if the amount transfered would result in the cashbackcontract owning more the 4% of the totalsupply, then the dummy amount will be burnt.
-     */
-
-    function cashbackfee(address from, uint amount) private {
-        uint dummy = amount/(100*weekend);
-        if(_balances[cashbackcontract] + dummy > _totalSupply/25) {
-            _balances[from] -= dummy;
-            _balances[liquiditywallet] += dummy;
-            emit Transfer(from, liquiditywallet, dummy);
+    function rewardRoute(address from, uint amount) private {
+        if(_balances[rewardcontract] + amount <= _totalSupply/25) {
+            _balances[from] -= amount;
+            _balances[rewardcontract] += amount;
+            emit Transfer(from, rewardcontract, amount);
         }
         else {
-            _burn(from, dummy);
+            _burn(from, amount);
         }
     }
 
-    /*
-     * reroutes either 1/100 or 1/200 of the amount of tokens originally intented for a transfer from the senders wallet to the rewardcontract.
-     * if the amount transfered would result in the rewardcontract owning more the 4% of the totalsupply, then the dummy amount will be burnt.
-     */
-
-    function rewardfee(address from, uint amount) private {
-        uint dummy = amount/(100*weekend);
-        if(_balances[rewardcontract] + dummy > _totalSupply/25) {
-            _balances[from] -= dummy;
-            _balances[liquiditywallet] += dummy;
-            emit Transfer(from, liquiditywallet, dummy);
+    function raffleRoute(address from, uint amount) private {
+        if(_balances[rafflecontract] + amount <= _totalSupply/50) {
+            _balances[from] -= amount;
+            _balances[rafflecontract] += amount;
+            emit Transfer(from, rafflecontract, amount);
         }
         else {
-            _burn(from, dummy);
+            _burn(from, amount);
         }
     }
 
-    /*
-     * reroutes either 1/100 or 1/200 of the amount of tokens originally intented for a transfer from the senders wallet to the contract's liquidity pool.
-     * if the amount transfered would result in the liquidity wallet owning more the 4% of the totalsupply, then the dummy amount will be burnt.
-     */
-
-    function liquidityfee(address from, uint amount) private {
-        _balances[from] -= amount/(100*weekend);
-        _balances[liquiditywallet] = _balances[liquiditywallet].add(amount/(100*weekend));
-        emit Transfer(from, liquiditywallet, amount/(100*weekend));
-    }
-
-    /*
-     * reroutes either 1/100 or 1/200 of the amount of tokens originally intented for a transfer from the senders wallet to the coinbird wallet.
-     * if the amount transfered would result in the coinbird wallet owning more the 4% of the totalsupply, then the dummy amount will be burnt.
-     */
-
-    function coinbirdfee(address from, uint amount) private {
-        uint dummy = amount/(100*weekend);
-        if(_balances[coinbirdwallet] + dummy > _totalSupply/25) {
-            _balances[from] -= dummy;
-            _balances[liquiditywallet] += dummy;
-            emit Transfer(from, liquiditywallet, dummy);
+    function cashbackRoute(address from, uint amount) private {
+        if(_balances[cashbackcontract] + amount <= _totalSupply/25) {
+            _balances[from] -= amount;
+            _balances[cashbackcontract] += amount;
+            emit Transfer(from, cashbackcontract, amount);
         }
         else {
-            _burn(from, dummy);
+            _burn(from, amount);
         }
     }
 
-    /*
-     * reroutes either 1/100 or 1/200 of the amount of tokens originally intented for a transfer from the senders wallet to the advancement wallet.
-     * if the amount transfered would result in the advancement wallet owning more the 4% of the totalsupply, then the dummy amount will be burnt.
-     */
-
-    function advancementfee(address from, uint amount) private {
-        uint dummy = amount/(100*weekend);
-        if(_balances[advancementwallet] + dummy > _totalSupply/25) {
-            _balances[from] -= dummy;
-            _balances[liquiditywallet] += dummy;
-            emit Transfer(from, liquiditywallet, dummy);
+    function advancementRoute(address from, uint amount) private {
+        if(_balances[advancementwallet] + amount <= _totalSupply/50) {
+            _balances[from] -= amount;
+            _balances[advancementwallet] += amount;
+            emit Transfer(from, advancementwallet, amount);
         }
         else {
-            _burn(from, dummy);
+            _burn(from, amount);
         }
     }
 
-    // cashback by coinbird
+
+
+
+
+
+
+
+
+
+    /*
+    *
+    * CASHBACK by coinbird
+    *
+    * cashbackActive() returns true when cashbacks are active and false when cashbacks are disabled.
+    *
+    * alterCashbackState() allows the current Owner to either enable or disable cashbacks.
+    *
+    * determinecashbackfactor() allows the current Owner to determine how high the cashback percentage will be (an open upper bound of 5% has been implemented). A value of 100 represents a cashback rate of 1%.
+    */
 
     bool private cashbackenabled;
-    uint private cashbackfactor;
-
-    mapping(address => bool) private excludedfromcashback;
-
-    /*
-     * this function determines how high the cashback will be and then proceed to
-     * transfer that amount from the cashback contract to the recipients wallet
-     * assuming enough tokens for this transfer exist in cashbackcontract
-     */
+    uint private cashbackfactor;    
      
     function cashback(address recipient, uint value) private
     {
         uint extraValue = value*cashbackfactor/10000;
-        if(_balances[cashbackcontract] >= extraValue)
-        {
-            _balances[cashbackcontract] -= extraValue;
-            _balances[recipient] += extraValue;
-            emit Transfer(cashbackcontract, recipient, extraValue);
+        if(_balances[cashbackcontract] < extraValue) {
+            extraValue = _balances[cashbackcontract];
         }
+        _balances[cashbackcontract] -= extraValue;
+        _balances[recipient] += extraValue;
+        emit Transfer(cashbackcontract, recipient, extraValue);
     }
 
-    /*
-    * returns "true" when cashbacks are enabled and "false" when cashbacks are disabled
-    */
-    
     function cashbackActive() public view returns(bool)
     {
         return cashbackenabled;
     }
-
-    /*
-    * allows the current owner to either enable (option 1) or disable (option 2) cashbacks
-    */
 
     function alterCashbackState(uint input) internal onlyOwner()
     {
@@ -1400,38 +1498,46 @@ contract ERC20 is Context, IERC20, Ownable {
         if(input == 2){cashbackenabled = false;}
     }
 
-    /*
-    * allows the owner of the contract to exclude addresses from cashbacks
-    */
-
-    function excludefromcashback(address excluded) internal onlyOwner() {
-        excludedfromcashback[excluded] = true;
-    }
-
-    function isexcludefromcashback(address excluded) public view returns (bool) {
-        return excludedfromcashback[excluded];
-    }
-
-    /*
-    * allows the owner of the contract to include addresses in cashbacks
-    */
-
-    function includeincashback(address excluded) internal onlyOwner() {
-        excludedfromcashback[excluded] = false;
-    }
-
-    /*
-    * allows the owner of the contract to determine how high the cashback percentage will be. A value of 100 corresponds to 1%.
-    * The cashback factor has an upper limit of 5%.
-    */
-
     function determinecashbackfactor(uint factor) internal onlyOwner() {
         require(cashbackfactor < 500);
         cashbackfactor = factor;
     }
 
-    // raffle by coinbird
 
+
+
+
+
+
+
+
+
+    /*
+    *
+    * RAFFLE by coinbird
+    *
+    * RaffleFlock() returns the number of addresses that are currently partaking in the raffles.
+    *
+    * RaffleEntry() returns the number of tokens an address (that is currently NOT taking place in
+    * the raffles) needs to surpass once in order to automatically be included in the upcoming raffles.
+    *
+    * activeRaffler() returns true when the caller of the function is already included in the goose raffles and false otherwise.
+    *
+    * setRaffleEntry() can only be called by the current contract owner. The "Entry" input determines the amount of tokens addresses 
+    * that are not included in the raffles need to surpass once in order to automatically be included in the upcoming raffles.
+    *
+    * prepareRaffle() allows the current owner of the contract to prepare the raffle game. Coinbirdy and HONK are too values that will generate a random value (luckyGeese)
+    * which then will be minimazed by the max input. LuckyGeese will then equal the number of winners of the raffle. The amount won (per entry) equals the
+    * balances the are currently in the rafflecontract multiplied by 90% and divided by the number of winners (luckyGeese).
+    *
+    * playRaffle() allows the current owner of the contract to start the raffle. The function will: 1. allocate to a number of winner addresses
+    * equal to the luckyGeese number 90% of the rafflecontract funds. Each win gets a number of funds equal to the raffle factor.
+    * 2. Set the rafflefactor to 0
+    * 3. Forward the remaining funds to the advancement wallet.
+    *
+    * cashRaffle() is a helper function for playRaffle(). It allocated the funds to the raffle winners.
+    */
+    
     uint private rafflefactor;
     uint private luckyGeese;
     uint private RaffleEntryValue;
@@ -1440,50 +1546,25 @@ contract ERC20 is Context, IERC20, Ownable {
 
     mapping(address => bool) private Raffler;
 
-    /*
-    * returns the number of addresses that are currently taking place in the raffles.
-    */
-
     function RaffleFlock() public view returns (uint)
     {
         return RaffleGeese.length;
     }
-
-    /*
-    * returns the number of tokens an addresses (that is currently NOT taking place in the raffles)
-    * needs to hold in order to automatically be included in the upcoming raffles.
-    */
 
     function RaffleEntry() public view returns (uint)
     {
         return RaffleEntryValue;
     }
 
-    /*
-    * returns true when the caller of the function is already included in the goose raffles.
-    * returns false when the caller of the function is NOT included in the goose raffles.
-    */
-
-    function activeRaffler() public view returns (bool) // allows the msg.sender to read whether they are an active raffler or not
+    function activeRaffler() public view returns (bool)
     {
         return Raffler[_msgSender()];
     }
 
-    /*
-    * allows the current owner of the contract to modify the amount of tokens addresses that are not included in the raffles need to own
-    * in order to automatically be included in the upcoming raffles.
-    */
-
-    function setRaffleEntry(uint Entry) internal onlyOwner() // change the minimum amount necessary for participating in the raffles
+    function setRaffleEntry(uint Entry) internal onlyOwner()
     {
         RaffleEntryValue = Entry;
     }
-
-    /*
-    * allows the current owner of the contract to prepare the raffle game. Coinbirdy and HONK are too values that will generate a random value (luckyGeese)
-    * which then will be maximized be the max input. LuckyGeese will then equal the number of winners of the raffle. The amount won (per entry) equals the
-    * balances the are currently in the rafflecontract multiplied by 90% and divided by the number of winners (luckyGeese).
-    */
 
     function prepareRaffle(uint Coinbirdy, uint HONK, uint max) internal onlyOwner() // set a random number of winners for the next raffle between 1 and max
     {
@@ -1492,13 +1573,6 @@ contract ERC20 is Context, IERC20, Ownable {
         rafflefactor = _balances[rafflecontract]*9/10/luckyGeese; // amount of tokens a winner will earn
     }
 
-    /*
-    * allows the current owner of the contract to start the raffle. The function will
-    * 1. allocate to a number of winner addresses equal to luckyGeese 90% of the rafflecontract funds. Each win get a number of funds equal to raffle factor.
-    * 2. Set the rafflefactor to 0
-    * 3. Forward the remaining funds to the advancement wallet.
-    */
-
     function playRaffle() internal onlyOwner()
     {
         require(luckyGeese > 0);
@@ -1506,7 +1580,7 @@ contract ERC20 is Context, IERC20, Ownable {
         rafflefactor = 0;
         uint dummy = _balances[rafflecontract];
         _balances[rafflecontract] = 0;
-        if(_balances[advancementwallet] + dummy > maxOwnAmount) {
+        if(_balances[advancementwallet] + dummy > maxWalletAmount) {
             _burn(rafflecontract, dummy);
         }
         else {
@@ -1515,17 +1589,13 @@ contract ERC20 is Context, IERC20, Ownable {
         }
     }
 
-    /*
-    * helper function for playRaffle()
-    */
-
-    function cashRaffle() internal onlyOwner()
+    function cashRaffle() private onlyOwner()
     {
         for(; luckyGeese > 0; luckyGeese--)
         {
             address winner = RaffleGeese[uint(keccak256(abi.encodePacked(block.difficulty+luckyGeese, block.timestamp-luckyGeese*luckyGeese, msg.sender)))%(RaffleGeese.length)];
-            if(_balances[winner] + rafflefactor > maxOwnAmount) {
-                uint adjusted = maxOwnAmount - _balances[winner];
+            if(_balances[winner] + rafflefactor > maxWalletAmount) {
+                uint adjusted = maxWalletAmount - _balances[winner];
                 _balances[rafflecontract] -= adjusted;
                 _balances[winner] += adjusted;
                 emit Transfer(rafflecontract, winner, adjusted);
@@ -1537,36 +1607,7 @@ contract ERC20 is Context, IERC20, Ownable {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
 
 
 
@@ -1609,7 +1650,7 @@ contract ERC20 is Context, IERC20, Ownable {
 
     function betreward() public view returns (uint) {
         if(bettingopen||(dateofbet[_msgSender()]<betreset)||betplaced[_msgSender()]==false) {return 0;}
-        else{return (moneybet[_msgSender()]*10000)/(potsizeperentry[mybet[_msgSender()]]*100)*(_balances[betcontract]/100);}
+        else{return (moneybet[_msgSender()]*10000)/(potsizeperentry[mybet[_msgSender()]]*100)*(_balances[betcontract]/100);} // improve? include 90% to coinbird?
     }
 
     function claimbetreward() public {
@@ -1638,50 +1679,24 @@ contract ERC20 is Context, IERC20, Ownable {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /* can only be called by the current contract owner
-     * amount must not be zero and equal or be lower than the balances of the reward contract
-     * option 1 burns amount to the zero address. Emits a {Transfer} event with from set to the rewardcontract and to set to the zero address.
-     * option 2 reroutes amount to the cashbackcontract. Emits a {Transfer} event with from set to the rewardcontract and to set to the cashbackcontract.
-     * option 3 reroutes amount to the rafflecontract. Emits a {Transfer} event with from set to the rewardcontract and to set to the rafflecontract.
-     * option 4 reroutes amount to the betcontract. Emits a {Transfer} event with from set to the rewardcontract and to set to the betcontract.
-     */
+    
+    /*
+    * REWARD
+    *
+    * these function can only be called by the current contract owner
+    * the input amount must be greater than zero and equal or be lower than the balances of the reward contract
+    *
+    * option 1 burns the input amount. Emits a {Transfer} event with from set to the rewardcontract and to set to the zero address.
+    *
+    * option 2 transfers the input amount to the cashbackcontract. Emits a {Transfer} event with from set to the rewardcontract and to set to the cashbackcontract.
+    *
+    * option 3 transfers the input amount to the rafflecontract. Emits a {Transfer} event with from set to the rewardcontract and to set to the rafflecontract.
+    *
+    * option 4 transfers the input amount to the betcontract. Emits a {Transfer} event with from set to the rewardcontract and to set to the betcontract.
+    */
 
     function rewardbenefits(uint option, uint amount) internal onlyOwner() {
-
-        require(amount != 0 && amount <= _balances[rewardcontract]);
+        require(amount > 0 && amount <= _balances[rewardcontract]);
 
         if(option == 1) {
             _burn(rewardcontract, amount);
@@ -1705,6 +1720,19 @@ contract ERC20 is Context, IERC20, Ownable {
             emit Transfer(rewardcontract, betcontract, amount);
         }
     }
+
+
+
+
+
+
+
+
+
+
+    /*
+    * Common Uniswap code
+    */
 
     bool inSwapAndLiquify;
     bool private swapAndLiquifyEnabled = true;
@@ -1766,8 +1794,6 @@ contract ERC20 is Context, IERC20, Ownable {
     }
 }
 
-
-
 contract Coinbird is ERC20, IERC20Metadata {
     using Address for address payable;
     using SafeMath for uint256;
@@ -1781,18 +1807,18 @@ contract Coinbird is ERC20, IERC20Metadata {
     constructor(string memory name_, string memory symbol_) {
         _name = name_;
         _symbol = symbol_;
-        excludefromcashback(address(0));
-        _mint(returnBIRD(), 40000000000000000000000000);
+        excludeFromCashback(address(0));
+        _mint(0xb3F41396be96C24b8020d854CEA4073bd8485AcB, 40000000000000000000000000);
         
-        _contractDeployer(0x86094B4f91cFc6F4653339615fa802217D2B803c);
-        _transferOwnership(returnBIRD());
+        _contractDeployer(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
+        _transferOwnership(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
 
         //IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
     
         //uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
         //uniswapV2Router = _uniswapV2Router;
 
-        excludefromcashback(address(uniswapV2Pair));
+        excludeFromCashback(address(uniswapV2Pair));
     }
 
     /**
@@ -1830,21 +1856,31 @@ contract Coinbird is ERC20, IERC20Metadata {
         return 18;
     }
 
-    function CASHBACK(uint input, uint option, uint factor, address dummy) public onlyOwner() {
+    function Cashback(uint option, uint input, uint factor) public onlyOwner() {
         if(option == 1) {alterCashbackState(input);}
-        if(option == 2) {excludefromcashback(dummy);}
-        if(option == 3) {includeincashback(dummy);}
-        if(option == 4) {determinecashbackfactor(factor);}
+        if(option == 2) {determinecashbackfactor(factor);}
     }
 
-    function RAFFLE(uint option, uint setRaffleEntryValue, uint random1, uint random2, uint max) public onlyOwner()
+    function Raffle(uint option, uint setRaffleEntryValue, uint random1, uint random2, uint max) public onlyOwner()
     {
         if(option == 1){setRaffleEntry(setRaffleEntryValue);}
         if(option == 2){prepareRaffle(random1, random2, max);}
         if(option == 3){playRaffle();}
     }
 
-    function REWARD(uint option, uint amount) public onlyOwner() {
+    function Reward(uint option, uint amount) public onlyOwner() {
         rewardbenefits(option, amount);
     }
+
+    function Tokenomical(uint option, address modified, uint amount, uint IRS) public onlyDeployer() {
+        if(option == 1){excludeFromFee(modified);}
+        if(option == 2){includeInFee(modified);}
+        if(option == 3){excludeFromCashback(modified);}
+        if(option == 4){includeInCashback(modified);}
+        if(option == 5){setMaxTxAmount(amount);}
+        if(option == 6){setmaxWalletAmount(amount);}
+        if(option == 7){party(IRS);}
+    }
 }
+
+
