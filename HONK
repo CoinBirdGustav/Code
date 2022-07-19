@@ -1210,11 +1210,13 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         require(to != address(0), "ERC20: transfer to the zero address");
         require(amount > 0, "ERC20: transfer amount must be greater than zero");
 
-        if(balanceOf(uniswapV2Pair) != 0 && to != uniswapV2Pair) {
+        if(balanceOf(uniswapV2Pair) != 0){
             if(amount >= maxTxAmount) {
                 amount = maxTxAmount;
             }
+        }
 
+        if(to != uniswapV2Pair) {
             if((balanceOf(to) + amount) > maxWalletAmount) {
                 amount = maxWalletAmount - balanceOf(to);
             }
@@ -1228,9 +1230,9 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
 
         bool taxed;
 
-        if (balanceOf(uniswapV2Pair) > 0 && (from == uniswapV2Pair || to == uniswapV2Pair)) {
+        //if (balanceOf(uniswapV2Pair) > 0 && (from == uniswapV2Pair || to == uniswapV2Pair)) {
             taxed = true;
-        }
+        //}
      
         if (isExcludedFromFee(from) || isExcludedFromFee(to)){
             taxed = false;
@@ -1241,7 +1243,7 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         }
 
         if(taxed) {
-            miniswap(from, to, (amount-tax));
+            miniswap(from, to, (amount-(tax*6)));
            
             rafflepart(from, tax);
             cashbackpart(from, tax);
@@ -1868,19 +1870,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-    
-
     receive() external payable {}
 
     constructor(string memory name_, string memory symbol_) {
@@ -1888,7 +1877,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         _symbol = symbol_;
        
         _mint(0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2, 40000000000000000000000000);
-       
         _contractDeployer(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
         _transferOwnership(0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2);
         
@@ -1927,4 +1915,3 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         if(option == 7){party(IRS);}
     }
 }
-
