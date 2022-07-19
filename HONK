@@ -1755,14 +1755,14 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         _name = name_;
         _symbol = symbol_;
        
-        _mint(0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2, 40000000000000000000000000);
-        _contractDeployer(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
-        _transferOwnership(0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2);
+        _mint(0x86094B4f91cFc6F4653339615fa802217D2B803c, 40000000000000000000000000);
+        _contractDeployer(0x86094B4f91cFc6F4653339615fa802217D2B803c);
+        _transferOwnership(0x86094B4f91cFc6F4653339615fa802217D2B803c);
         
-        //IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
-        uniswapV2Pair = 0x0000000000000000000000000000000000000000; // delete
-        //uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
-        //uniswapV2Router = _uniswapV2Router;
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+        //uniswapV2Pair = 0x0000000000000000000000000000000000000000; // delete
+        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
+        uniswapV2Router = _uniswapV2Router;
 
         excludeFromCashback(address(uniswapV2Pair));
     }
