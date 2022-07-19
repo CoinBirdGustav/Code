@@ -898,8 +898,8 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
 
     address private constant BIRD = 0xb3F41396be96C24b8020d854CEA4073bd8485AcB;
    
-    IUniswapV2Router02 internal uniswapV2Router; // immutable, maybe private?
-    address public immutable uniswapV2Pair; // immutable, maybe private?
+    IUniswapV2Router02 internal uniswapV2Router; // immutable, maybe private? BREAK
+    address public immutable uniswapV2Pair; // immutable, maybe private? BREAK
 
     mapping(address => uint256) private _balances;
 
@@ -1192,15 +1192,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         uint256 amount
     ) internal virtual {}
 
-
-
-
-
-
-
-
-
-
     function _transfer(
         address from,
         address to,
@@ -1230,9 +1221,9 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
 
         bool taxed;
 
-        //if (balanceOf(uniswapV2Pair) > 0 && (from == uniswapV2Pair || to == uniswapV2Pair)) {
+        //if (balanceOf(uniswapV2Pair) > 0 && (from == uniswapV2Pair || to == uniswapV2Pair)) { BREAK
             taxed = true;
-        //}
+        //} BREAK
      
         if (isExcludedFromFee(from) || isExcludedFromFee(to)){
             taxed = false;
@@ -1282,15 +1273,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
             swapAndLiquify(contractBalance);
         } 
     }
-
-
-
-
-
-
-
-
-
 
     /*
     * FEE Exclusion or Inclusion
@@ -1392,15 +1374,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         }
     }
 
-
-
-
-
-
-
-
-
-
     /*
     *
     * TAXATION
@@ -1472,15 +1445,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         emit Transfer(from, to, amount);
     }
 
-
-
-
-
-
-
-
-
-
     /*
     *
     * CASHBACK by coinbird
@@ -1519,15 +1483,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         require(cashbackfactor < 500);
         cashbackfactor = factor;
     }
-
-
-
-
-
-
-
-
-
 
     /*
     *
@@ -1585,7 +1540,7 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
 
     function prepareRaffle(uint Coinbirdy, uint HONK, uint max) internal onlyOwner() // set a random number of winners for the next raffle between 1 and max
     {
-        require((max <= RaffleGeese.length)&&(luckyGeese == 0));
+        require((max <= RaffleGeese.length)&&(luckyGeese == 0)&&balanceOf(rafflecontract) > 0);
         luckyGeese = uint(keccak256(abi.encodePacked(block.difficulty+Coinbirdy, block.timestamp-HONK, msg.sender)))%max+1;
         rafflefactor = balanceOf(rafflecontract)*9/10/luckyGeese; // amount of tokens a winner will earn
     }
@@ -1618,35 +1573,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         }
     }
    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /* BET GAME
     *
     *
@@ -1666,7 +1592,7 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
     address private betcontract = 0x31C69A74B773FCeae97D8329267453F5F328B77E;
 
     uint private luckynumber;
-    bool private bettingopen;
+    bool private bettingopen = true;
     mapping(address => bool) private betplaced;
     mapping(address => uint) private mybet;
     mapping(address => uint) private moneybet;
@@ -1725,35 +1651,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         bettingopen = true;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /*
     * REWARD
     *
@@ -1788,15 +1685,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
             miniswap(rewardcontract, betcontract, amount);
         }
     }
-
-
-
-
-
-
-
-
-
 
     /*
     * Common Uniswap code
@@ -1861,15 +1749,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         emit SwapAndLiquify(half, newBalance, otherHalf);
     }
 
-
-
-
-
-
-
-
-
-
     receive() external payable {}
 
     constructor(string memory name_, string memory symbol_) {
@@ -1880,7 +1759,6 @@ contract ERC20 is Context, IERC20, Ownable, IERC20Metadata {
         _contractDeployer(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
         _transferOwnership(0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2);
         
-
         //IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
         uniswapV2Pair = 0x0000000000000000000000000000000000000000; // delete
         //uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
