@@ -249,7 +249,7 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
     using SafeMath for uint256;
     using Address for address;
 
-    string private constant _name = "coinbird";
+    string private constant _name = "Coinbird.ETH";
     string private constant _symbol = "$HONK";
     uint8 private constant _decimals = 18;
     
@@ -257,9 +257,9 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
     uint256 private _maxTxAmount;
     uint256 private _maxWalletSize;
     
-    address payable private coinbird = payable(0x1b8b5c453141fEf5Dc0b168525249866A9C522E3);
+    address payable private coinbird = payable(0x2956D21D24668d6c1F43a06C827059Fa957207d2);
     address payable private plushy = payable(0x10D2eef79314D8d895Ad23bbc125D071A0ec9396);
-    address payable private fire = payable(0x7d40e7f1F9F8f7F7bf91B2760656d7d9489A88E4);
+    address payable private fire = payable(0xF7aa6566f731033C1Fc4169014F8E33110A66218);
 
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
