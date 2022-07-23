@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: NONE
 
-// coinbird.io - HONK!
+// cryptopupper.org - PAW!
 
 pragma solidity 0.8.15;
 
@@ -262,12 +262,12 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
     event MaxTxAmountUpdated(uint256 _maxTxAmount);
     event MaxWalletSizeUpdated(uint256 _maxTxAmount);
 
-    function updateMaxTxAmount(uint TxAmount) private {
+    function updateMaxTxAmount(uint TxAmount) internal virtual {
         _maxTxAmount = TxAmount;
         emit MaxTxAmountUpdated(_maxTxAmount);
     }
 
-    function updateMaxWalletSize(uint WalletSize) private {
+    function updateMaxWalletSize(uint WalletSize) internal virtual {
         _maxWalletSize = WalletSize;
         emit MaxWalletSizeUpdated(WalletSize);
     }
