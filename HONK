@@ -249,8 +249,8 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
     using SafeMath for uint256;
     using Address for address;
 
-    string private constant _name = "coinbird.eth";
-    string private constant _symbol = "$BIRD";
+    string private _name = "coinbird.eth";
+    string private _symbol = "$BIRD";
     uint8 private constant _decimals = 18;
     
     uint256 private _totalSupply;
@@ -537,7 +537,9 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         emit SwapAndLiquify(half, newBalance, otherHalf);
     }
 
-    constructor() {
+    constructor(string memory name_, string memory symbol_) {
+        _name = name_;
+        _symbol = symbol_;
         _transferOwnership(0x86094B4f91cFc6F4653339615fa802217D2B803c);
         _mint(0x86094B4f91cFc6F4653339615fa802217D2B803c, 100000000000000000000000000);
         excludeFromTax(0x86094B4f91cFc6F4653339615fa802217D2B803c);
@@ -549,3 +551,4 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         updateMaxWalletSize(_totalSupply/100);
     }
 }
+
