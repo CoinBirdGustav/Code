@@ -404,6 +404,7 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
     }
 
     //to receive ETH from uniswapV2Router when swapping
+    
     receive() external payable {}
 
     // TRADE-DEFINING
