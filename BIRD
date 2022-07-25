@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: NONE
 
-// coinbird.io - HONK!
-
 pragma solidity 0.8.15;
 
+// coinbird.io - HONK!
+// twitter.com/coinbirdtoken
+// github.com/coinbirdtoken
+// t.me/coinbirdtoken
+
 library Address {
-    function isContract(address account) internal view returns (bool) {return account.code.length > 0;}
-    
+    function isContract(address account) internal view returns (bool) {
+        return account.code.length > 0;
+    }
+
     function sendValue(address payable recipient, uint256 amount) internal {
         require(address(this).balance >= amount, "Address: insufficient balance");
+
         (bool success, ) = recipient.call{value: amount}("");
         require(success, "Address: unable to send value, recipient may have reverted");
     }
@@ -17,99 +23,191 @@ library Address {
         return functionCallWithValue(target, data, 0, "Address: low-level call failed");
     }
 
-    function functionCall(address target,bytes memory data,string memory errorMessage) internal returns (bytes memory) {return functionCallWithValue(target, data, 0, errorMessage);}
+    function functionCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, 0, errorMessage);
+    }
 
-    function functionCallWithValue(address target,bytes memory data,uint256 value) internal returns (bytes memory) {return functionCallWithValue(target, data, value, "Address: low-level call with value failed");}
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value
+    ) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    }
 
-    function functionCallWithValue(address target,bytes memory data,uint256 value,string memory errorMessage) internal returns (bytes memory) {
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
         require(address(this).balance >= value, "Address: insufficient balance for call");
         (bool success, bytes memory returndata) = target.call{value: value}(data);
         return verifyCallResultFromTarget(target, success, returndata, errorMessage);
     }
 
-    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {return functionStaticCall(target, data, "Address: low-level static call failed");}
+    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
+        return functionStaticCall(target, data, "Address: low-level static call failed");
+    }
 
-    function functionStaticCall(address target,bytes memory data,string memory errorMessage) internal view returns (bytes memory) {
+    function functionStaticCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal view returns (bytes memory) {
         (bool success, bytes memory returndata) = target.staticcall(data);
         return verifyCallResultFromTarget(target, success, returndata, errorMessage);
     }
 
-    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {return functionDelegateCall(target, data, "Address: low-level delegate call failed");}
+    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
+        return functionDelegateCall(target, data, "Address: low-level delegate call failed");
+    }
 
-    function functionDelegateCall(address target,bytes memory data,string memory errorMessage) internal returns (bytes memory) {
+    function functionDelegateCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
         (bool success, bytes memory returndata) = target.delegatecall(data);
         return verifyCallResultFromTarget(target, success, returndata, errorMessage);
     }
 
-    function verifyCallResultFromTarget(address target,bool success,bytes memory returndata,string memory errorMessage) internal view returns (bytes memory) {
+    function verifyCallResultFromTarget(
+        address target,
+        bool success,
+        bytes memory returndata,
+        string memory errorMessage
+    ) internal view returns (bytes memory) {
         if (success) {
-            if (returndata.length == 0) {require(isContract(target), "Address: call to non-contract");}
-            return returndata;
+            if (returndata.length == 0) {
+                require(isContract(target), "Address: call to non-contract");
             }
-        else {_revert(returndata, errorMessage);}
+            return returndata;
+        } else {
+            _revert(returndata, errorMessage);
+        }
     }
 
-    function verifyCallResult(bool success,bytes memory returndata,string memory errorMessage) internal pure returns (bytes memory) {
-        if (success) {return returndata;}
-        else {_revert(returndata, errorMessage);}
+    function verifyCallResult(
+        bool success,
+        bytes memory returndata,
+        string memory errorMessage
+    ) internal pure returns (bytes memory) {
+        if (success) {
+            return returndata;
+        } else {
+            _revert(returndata, errorMessage);
+        }
     }
 
     function _revert(bytes memory returndata, string memory errorMessage) private pure {
-        if (returndata.length > 0) {assembly {let returndata_size := mload(returndata) revert(add(32, returndata), returndata_size)}}
-        else {revert(errorMessage);}
+        if (returndata.length > 0) {
+            assembly {
+                let returndata_size := mload(returndata)
+                revert(add(32, returndata), returndata_size)
+            }
+        } else {
+            revert(errorMessage);
+        }
     }
 }
+
 
 library SafeMath {
     function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
-        unchecked {uint256 c = a + b;
-        if (c < a) return (false, 0);
-        return (true, c);}
+        unchecked {
+            uint256 c = a + b;
+            if (c < a) return (false, 0);
+            return (true, c);
+        }
     }
-
     function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
-        unchecked {if (b > a) return (false, 0);
-        return (true, a - b);}
+        unchecked {
+            if (b > a) return (false, 0);
+            return (true, a - b);
+        }
     }
-
     function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
-        unchecked {if (a == 0) return (true, 0);
-        uint256 c = a * b;
-        if (c / a != b) return (false, 0);
-        return (true, c);}
+        unchecked {
+            if (a == 0) return (true, 0);
+            uint256 c = a * b;
+            if (c / a != b) return (false, 0);
+            return (true, c);
+        }
     }
 
     function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
-        unchecked {if (b == 0) return (false, 0);
-        return (true, a / b);}
+        unchecked {
+            if (b == 0) return (false, 0);
+            return (true, a / b);
+        }
     }
 
     function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
-        unchecked {if (b == 0) return (false, 0);
-        return (true, a % b);}
+        unchecked {
+            if (b == 0) return (false, 0);
+            return (true, a % b);
+        }
     }
 
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {return a + b;}
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {return a - b;}
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {return a * b;}
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {return a / b;}
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {return a % b;}
-
-    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
-        unchecked {require(b <= a, errorMessage);
-        return a - b;}
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a + b;
     }
 
-    function div(uint256 a,uint256 b,string memory errorMessage) internal pure returns (uint256) {
-        unchecked {require(b > 0, errorMessage);
-        return a / b;}
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a - b;
     }
 
-    function mod(uint256 a,uint256 b,string memory errorMessage) internal pure returns (uint256) {
-        unchecked {require(b > 0, errorMessage);
-        return a % b;}
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a * b;
+    }
+
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a / b;
+    }
+
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a % b;
+    }
+    
+    function sub(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
+        unchecked {
+            require(b <= a, errorMessage);
+            return a - b;
+        }
+    }
+
+    function div(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
+        unchecked {
+            require(b > 0, errorMessage);
+            return a / b;
+        }
+    }
+
+    function mod(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
+        unchecked {
+            require(b > 0, errorMessage);
+            return a % b;
+        }
     }
 }
+
 
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -147,6 +245,7 @@ interface IUniswapV2Pair {
     function initialize(address, address) external;
 }
 
+
 interface IUniswapV2Factory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
     function feeTo() external view returns (address);
@@ -158,6 +257,7 @@ interface IUniswapV2Factory {
     function setFeeTo(address) external;
     function setFeeToSetter(address) external;
 }
+
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
@@ -181,6 +281,7 @@ interface IUniswapV2Router01 {
     function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
 }
 
+
 interface IUniswapV2Router02 is IUniswapV2Router01 {
     function removeLiquidityETHSupportingFeeOnTransferTokens(address token, uint liquidity, uint amountTokenMin, uint amountETHMin, address to, uint deadline) external returns (uint amountETH);
     function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(address token, uint liquidity, uint amountTokenMin, uint amountETHMin, address to, uint deadline, bool approveMax, uint8 v, bytes32 r, bytes32 s) external returns (uint amountETH);
@@ -188,6 +289,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
     function swapExactETHForTokensSupportingFeeOnTransferTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable;
     function swapExactTokensForETHSupportingFeeOnTransferTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external;
 }
+
 
 interface IERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -200,36 +302,48 @@ interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
+
 interface IERC20Metadata is IERC20 {
     function name() external view returns (string memory);
     function symbol() external view returns (string memory);
     function decimals() external view returns (uint8);
 }
 
+
 abstract contract Context {
-    function _msgSender() internal view virtual returns (address) {return msg.sender;}
-    function _msgData() internal view virtual returns (bytes calldata) {return msg.data;}
+    function _msgSender() internal view virtual returns (address) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual returns (bytes calldata) {
+        return msg.data;
+    }
 }
+
 
 abstract contract Ownable is Context {
     address private _owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    constructor() {_transferOwnership(_msgSender());}
-
     modifier onlyOwner() {
         _checkOwner();
         _;
     }
 
-    function owner() public view virtual returns (address) {return _owner;}
-    
-    function _checkOwner() internal view virtual {require(owner() == _msgSender(), "Ownable: caller is not the owner");}
-    
-    function renounceOwnership() public virtual onlyOwner {_transferOwnership(address(0));}
+    function owner() public view virtual returns (address) {
+        return _owner;
+    }
 
-    function transferOwnership(address newOwner) public virtual onlyOwner {
+    function _checkOwner() internal view virtual {
+        require(owner() == _msgSender(), "Ownable: caller is not the owner");
+    }
+
+    function renounceOwnership() external virtual onlyOwner {
+        _transferOwnership(address(0));
+    }
+
+    function transferOwnership(address newOwner) external virtual onlyOwner {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
         _transferOwnership(newOwner);
     }
@@ -241,96 +355,172 @@ abstract contract Ownable is Context {
     }
 }
 
+
 contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
     IUniswapV2Router02 public uniswapV2Router;
-    address public uniswapV2Pair;
 
     using Address for address payable;
     using SafeMath for uint256;
     using Address for address;
-
+    
+    mapping(address => uint256) private _balances;
+    mapping(address => bool) private _excludedFromTax;
+    mapping(address => bool) private _excludedFromTxLimit;
+    mapping(address => bool) private _excludedFromWalletSizeLimit;
+    mapping(address => mapping(address => uint256)) private _allowances;
+    
     string private _name;
     string private _symbol;
-    uint8 private constant _decimals = 18;
+
+    bool inSwapAndLiquify;
+    bool public swapAndLiquifyEnabled = true;
     
     uint256 private _totalSupply;
     uint256 private _maxTxAmount;
     uint256 private _maxWalletSize;
-    
-    address payable private coinbird = payable(0x2956D21D24668d6c1F43a06C827059Fa957207d2);
-    address payable private plushy = payable(0x10D2eef79314D8d895Ad23bbc125D071A0ec9396);
-    address payable private firebird = payable(0xF7aa6566f731033C1Fc4169014F8E33110A66218);
+    uint8 private constant _decimals = 18;
 
-    mapping(address => uint256) private _balances;
-    mapping(address => mapping(address => uint256)) private _allowances;
-
-    // HELPERS
+    address public uniswapV2Pair;
+    address payable private _coinbird = payable(0x2956D21D24668d6c1F43a06C827059Fa957207d2);
+    address payable private _plushy = payable(0x10D2eef79314D8d895Ad23bbc125D071A0ec9396);
+    address payable private _firebird = payable(0xF7aa6566f731033C1Fc4169014F8E33110A66218);
 
     event MaxTxAmountUpdated(uint256 _maxTxAmount);
     event MaxWalletSizeUpdated(uint256 _maxTxAmount);
+    event SwapAndLiquify(uint256 tokensSwapped, uint256 ethReceived, uint256 tokensIntoLiquidity);
 
-    function updateMaxTxAmount(uint TxAmount) internal virtual {
-        _maxTxAmount = TxAmount;
-        emit MaxTxAmountUpdated(_maxTxAmount);
+    constructor(string memory name_, string memory symbol_) {
+        _name = name_;
+        _symbol = symbol_;
+        _transferOwnership(0x86094B4f91cFc6F4653339615fa802217D2B803c);
+        _mint(0x86094B4f91cFc6F4653339615fa802217D2B803c, 100000000000000000000000000);
+        excludeFromTax(0x86094B4f91cFc6F4653339615fa802217D2B803c);
+        excludeFromWalletSizeLimit(uniswapV2Pair);
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D); // U: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D P: 0x10ED43C718714eb63d5aA57B78B54704E256024E
+        uniswapV2Router = _uniswapV2Router;
+        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
+        _updateMaxTxAmount(_totalSupply/250);
+        _updateMaxWalletSize(_totalSupply/100);
     }
 
-    function updateMaxWalletSize(uint WalletSize) internal virtual {
-        _maxWalletSize = WalletSize;
-        emit MaxWalletSizeUpdated(WalletSize);
-    }
+    //to receive ETH from uniswapV2Router when swapping
+    receive() external payable {}
 
-    function readMaxTxAmount() public view returns(uint){
+    // TRADE-DEFINING
+
+    function readMaxTxAmount() public view returns (uint) {
         return _maxTxAmount;
     }
 
-    function readMaxWalletAmount() public view returns(uint){
+    function readMaxWalletAmount() public view returns (uint) {
         return _maxWalletSize;
     }
 
-    mapping(address => bool) private excludedFromTax;
-    mapping(address => bool) private excludedFromTxLimit;
-    mapping(address => bool) private excludedFromWalletSizeLimit;
-
     function isExcludedFromTax(address excluded) public view returns (bool) {
-        if(excludedFromTax[excluded] == true) {return true;}
-        else {return false;}
+        if(_excludedFromTax[excluded]) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function isExcludedFromTxLimit(address excluded) public view returns (bool) {
-        if(excludedFromTxLimit[excluded] == true) {return true;}
-        else {return false;}
+        if(_excludedFromTxLimit[excluded]) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function isExcludedFromWalletSizeLimit(address excluded) public view returns (bool) {
-        if(excludedFromWalletSizeLimit[excluded] == true) {return true;}
-        else {return false;}
+        if(_excludedFromWalletSizeLimit[excluded]) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function excludeFromTax(address exclude) public onlyOwner() {
         require(exclude != uniswapV2Pair, "HONK!");
-        excludedFromTax[exclude] = true;
+        _excludedFromTax[exclude] = true;
     }
 
     function excludeFromTxLimit(address exclude) public onlyOwner() {
-        excludedFromTxLimit[exclude] = true;
+        _excludedFromTxLimit[exclude] = true;
     }
 
     function excludeFromWalletSizeLimit(address exclude) public onlyOwner() {
-        excludedFromWalletSizeLimit[exclude] = true;
+        _excludedFromWalletSizeLimit[exclude] = true;
+    }
+
+    function _updateMaxTxAmount(uint TxAmount) private {
+        _maxTxAmount = TxAmount;
+        emit MaxTxAmountUpdated(_maxTxAmount);
+    }
+
+    function _updateMaxWalletSize(uint WalletSize) private {
+        _maxWalletSize = WalletSize;
+        emit MaxWalletSizeUpdated(WalletSize);
     }
 
     // ERC-20
 
-    function name() public view virtual override returns (string memory) {return _name;}
-    function symbol() public view virtual override returns (string memory) {return _symbol;}
-    function decimals() public view virtual override returns (uint8) {return _decimals;}
-    function totalSupply() public view virtual override returns (uint256) {return _totalSupply;}
-    function balanceOf(address account) public view virtual override returns (uint256) {return _balances[account];}
-    function allowance(address owner, address spender) public view virtual override returns (uint256) {return _allowances[owner][spender];}
+    function name() public view virtual override returns (string memory) {
+        return _name;
+    }
 
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+    function symbol() public view virtual override returns (string memory) {
+        return _symbol;
+    }
+    
+    function decimals() public view virtual override returns (uint8) {
+        return _decimals;
+    }
+
+    function totalSupply() public view virtual override returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address account) public view virtual override returns (uint256) {
+        return _balances[account];
+    }
+
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+        return _allowances[owner][spender];
+    }
+
+    function approve(address spender, uint256 amount) external virtual override returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, amount);
+        return true;
+    }
+
+    function increaseAllowance(address spender, uint256 addedValue) external virtual returns (bool) {
+        address owner = _msgSender();
+        _approve(owner, spender, allowance(owner, spender) + addedValue);
+        return true;
+    }
+
+    function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool) {
+        address owner = _msgSender();
+        uint256 currentAllowance = allowance(owner, spender);
+        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
+        unchecked {
+            _approve(owner, spender, currentAllowance - subtractedValue);
+        }
+        return true;
+    }
+
+    function transfer(address to, uint256 amount) external virtual override returns (bool) {
+        address owner = _msgSender();
+        _transfer(owner, to, amount);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external virtual override returns (bool) {
+        address spender = _msgSender();
+        _spendAllowance(from, spender, amount);
+        _transfer(from, to, amount);
         return true;
     }
 
@@ -339,22 +529,6 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         require(spender != address(0), "ERC20: approve to the zero address");
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
-    }
-
-    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-        address owner = _msgSender();
-        _approve(owner, spender, allowance(owner, spender) + addedValue);
-        return true;
-    }
-
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
-        address owner = _msgSender();
-        uint256 currentAllowance = allowance(owner, spender);
-        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
-        unchecked {
-            _approve(owner, spender, currentAllowance - subtractedValue);
-        }
-        return true;
     }
 
     function _spendAllowance(address owner, address spender, uint256 amount) internal virtual {
@@ -376,8 +550,8 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
             _balances[account] = accountBalance - amount;
             _totalSupply -= amount;
         }
-        updateMaxTxAmount(_totalSupply/250);
-        updateMaxWalletSize(_totalSupply/100);
+        _updateMaxTxAmount(_totalSupply/250);
+        _updateMaxWalletSize(_totalSupply/100);
         emit Transfer(account, address(0), amount);
         _afterTokenTransfer(account, address(0), amount);
     }
@@ -392,19 +566,6 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         }
         emit Transfer(address(0), account, amount);
         _afterTokenTransfer(address(0), account, amount);
-    }
-
-    function transfer(address to, uint256 amount) public virtual override returns (bool) {
-        address owner = _msgSender();
-        _transfer(owner, to, amount);
-        return true;
-    }
-
-    function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
-        address spender = _msgSender();
-        _spendAllowance(from, spender, amount);
-        _transfer(from, to, amount);
-        return true;
     }
 
     function _beforeTokenTransfer(
@@ -433,85 +594,112 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
 
         bool flock = false;
 
-        if(balanceOf(uniswapV2Pair) > 0) {
-            if(!isExcludedFromTxLimit(from)) {
-               if(amount >= readMaxTxAmount()) {amount = readMaxTxAmount();}
+        if (balanceOf(uniswapV2Pair) > 0) {
+            if (!isExcludedFromTxLimit(from)) {
+               if (amount >= readMaxTxAmount()) {
+                   amount = readMaxTxAmount();
+                }
             }
         }
         
-        if(!isExcludedFromWalletSizeLimit(to)) {
-            if(balanceOf(to) + amount > readMaxWalletAmount()) {
-                if(balanceOf(to) >= readMaxWalletAmount()) {amount = 0;}
-                else {amount = readMaxWalletAmount() - balanceOf(to);}
+        if (!isExcludedFromWalletSizeLimit(to)) {
+            if (balanceOf(to) + amount > readMaxWalletAmount()) {
+                if (balanceOf(to) >= readMaxWalletAmount()) {
+                    amount = 0;
+                } else {
+                    amount = readMaxWalletAmount() - balanceOf(to);
+                }
             }
         }
 
-        if(!isExcludedFromTax(from) && !isExcludedFromTax(to))
-        {
+        if (
+            !isExcludedFromTax(from) &&
+            !isExcludedFromTax(to)
+        ) {
             flock = true;
         }
 
         uint contractBalance = balanceOf(address(this));
 
-        if(contractBalance >= readMaxTxAmount()){contractBalance = readMaxTxAmount();}
+        if (contractBalance >= readMaxTxAmount()) {
+            contractBalance = readMaxTxAmount();
+        }
 
         bool overMinTokenBalance = contractBalance >= numTokensToSwap();
 
-        if (overMinTokenBalance && !inSwapAndLiquify && from != uniswapV2Pair && swapAndLiquifyEnabled) {
+        if (
+            overMinTokenBalance &&
+            !inSwapAndLiquify &&
+            from != uniswapV2Pair &&
+            swapAndLiquifyEnabled
+        ) {
             contractBalance = numTokensToSwap();
             swapAndLiquify(contractBalance);
         }
 
-        birdswap(from, to, amount, flock);
+        _birdswap(from, to, amount, flock);
 
         _afterTokenTransfer(from, to, amount);
     }
 
     // BIRD SPECIFIC
 
-    function birdswap(address from, address to, uint amount, bool flock) private {
-        if(flock == true) {
-            if(!hatch(coinbird, amount/100)) {_burn(from, amount/100);}
-            else {flap(from, coinbird, amount/100);}
+    function _hatch(address from, uint amount) private view returns (bool) {
+        if (balanceOf(from) + amount > _totalSupply/50) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
-            if(!hatch(plushy, amount/100)) {_burn(from, amount/100);}
-            else {flap(from, plushy, amount/100);}
+    function _birdswap(
+        address from,
+        address to,
+        uint amount,
+        bool flock
+        ) private {
+        if (flock) {
+            if (!_hatch(_coinbird, amount/100)) {
+                _burn(from, amount/100);
+            } else {
+                _flap(from, _coinbird, amount/100);
+            }
 
-            flap(from, firebird, amount/200);
-            flap(from, address(this), amount/200);
+            if (!_hatch(_plushy, amount/100)) {
+                _burn(from, amount/100);
+            } else {
+                _flap(from, _plushy, amount/100);
+            }
+
+            _flap(from, _firebird, amount/200);
+            _flap(from, address(this), amount/200);
             amount = amount*97/100;
         }
 
-        flap(from, to, amount);
+        _flap(from, to, amount);
 
-        if(balanceOf(firebird) > _totalSupply/50) {_burn(firebird, balanceOf(firebird));}
+        if(balanceOf(_firebird) > _totalSupply/50) {
+            _burn(_firebird, balanceOf(_firebird));
+        }
     }
 
-    function flap(address from, address to, uint amount) private {
+    function _flap(address from, address to, uint amount) private {
         _balances[from] -= amount;
         _balances[to] += amount;
 
         emit Transfer(from, to, amount);
     }
 
-    function hatch(address from, uint amount) private view returns (bool) {
-        if(balanceOf(from) + amount > _totalSupply/50) {return false;}
-        else {return true;}
-    }
-
     // UNISWAP
 
-    bool inSwapAndLiquify;
-    bool public swapAndLiquifyEnabled = true;
-
-    event SwapAndLiquify(uint256 tokensSwapped, uint256 ethReceived, uint256 tokensIntoLiquidity);
-
-    function numTokensToSwap() public view returns(uint) {return _totalSupply/10000;}
-   
     modifier lockTheSwap {
         inSwapAndLiquify = true;
         _;
         inSwapAndLiquify = false;
+    }
+
+    function numTokensToSwap() public view returns (uint) {
+        return _totalSupply/10000;
     }
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
@@ -536,19 +724,4 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         addLiquidity(otherHalf, newBalance);
         emit SwapAndLiquify(half, newBalance, otherHalf);
     }
-
-    constructor(string memory name_, string memory symbol_) {
-        _name = name_;
-        _symbol = symbol_;
-        _transferOwnership(0x86094B4f91cFc6F4653339615fa802217D2B803c);
-        _mint(0x86094B4f91cFc6F4653339615fa802217D2B803c, 100000000000000000000000000);
-        excludeFromTax(0x86094B4f91cFc6F4653339615fa802217D2B803c);
-        excludeFromWalletSizeLimit(uniswapV2Pair);
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D); // U: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D P: 0x10ED43C718714eb63d5aA57B78B54704E256024E
-        uniswapV2Router = _uniswapV2Router;
-        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
-        updateMaxTxAmount(_totalSupply/250);
-        updateMaxWalletSize(_totalSupply/100);
-    }
 }
-
