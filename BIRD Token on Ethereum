@@ -576,15 +576,15 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
 
     // ERC-20
 
-    function name() public view virtual override returns (string memory) {
+    function name() external view virtual override returns (string memory) {
         return _name;
     }
 
-    function symbol() public view virtual override returns (string memory) {
+    function symbol() external view virtual override returns (string memory) {
         return _symbol;
     }
 
-    function decimals() public view virtual override returns (uint8) {
+    function decimals() external view virtual override returns (uint8) {
         return 18;
     }
 
@@ -596,7 +596,7 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         return _balances[account];
     }
 
-    function transfer(address to, uint256 amount) public virtual override returns (bool) {
+    function transfer(address to, uint256 amount) external virtual override returns (bool) {
         address owner = _msgSender();
         _transfer(owner, to, amount);
         return true;
@@ -606,7 +606,7 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         return _allowances[owner][spender];
     }
 
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+    function approve(address spender, uint256 amount) external virtual override returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, amount);
         return true;
@@ -616,20 +616,20 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         address from,
         address to,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) external virtual override returns (bool) {
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
         return true;
     }
 
-    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) external virtual returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, allowance(owner, spender) + addedValue);
         return true;
     }
 
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool) {
         address owner = _msgSender();
         uint256 currentAllowance = allowance(owner, spender);
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
@@ -715,11 +715,6 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         uint256 amount
     ) internal virtual {}
 
-
-
-
-
-
     function _transfer(
         address from,
         address to,
@@ -782,8 +777,6 @@ contract Coinbird is Context, IERC20, Ownable, IERC20Metadata {
         _birdswap(from, to, amount, flock);
 
         _afterTokenTransfer(from, to, amount);
-
-        emit Transfer(from, to, amount);
     }
 
     // BIRD SPECIFIC
