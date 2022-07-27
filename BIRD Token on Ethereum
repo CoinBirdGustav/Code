@@ -482,8 +482,8 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     mapping(address => bool) private _excludedFromWalletLimitation;
     mapping(address => mapping(address => uint256)) private _allowances;
     
-    string private _name = "BIRDY";
-    string private _symbol = "$BIRDY";
+    string private _name = "coinbird.eth";
+    string private _symbol = "$BIRD";
 
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = true;
@@ -499,7 +499,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
 
     constructor() {
         _mint(0x86094B4f91cFc6F4653339615fa802217D2B803c, 100000000000000000000000000);
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D); // U: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D P: 0x10ED43C718714eb63d5aA57B78B54704E256024E
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E); // U: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D P: 0x10ED43C718714eb63d5aA57B78B54704E256024E
         uniswapV2Router = _uniswapV2Router;
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
     }
@@ -511,7 +511,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     // TRADE-DEFINING
 
     function maxTxLimit() public view returns (uint) {
-        return totalSupply()/100;
+        return _totalSupply/100;
     }
 
     function isExcludedFromTax(address excluded) public view returns (bool) {
@@ -547,11 +547,11 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         return 18;
     }
 
-    function totalSupply() public view virtual override returns (uint256) {
+    function totalSupply() external view virtual override returns (uint256) {
         return _totalSupply;
     }
 
-    function balanceOf(address account) public view virtual override returns (uint256) {
+    function balanceOf(address account) external view virtual override returns (uint256) {
         return _balances[account];
     }
 
@@ -561,7 +561,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         return true;
     }
 
-    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+    function allowance(address owner, address spender) external view virtual override returns (uint256) {
         return _allowances[owner][spender];
     }
 
@@ -584,13 +584,13 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
 
     function increaseAllowance(address spender, uint256 addedValue) external virtual returns (bool) {
         address owner = _msgSender();
-        _approve(owner, spender, allowance(owner, spender) + addedValue);
+        _approve(owner, spender, _allowances[owner][spender] + addedValue);
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool) {
         address owner = _msgSender();
-        uint256 currentAllowance = allowance(owner, spender);
+        uint256 currentAllowance = _allowances[owner][spender];
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
         
         unchecked {
@@ -629,7 +629,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         address owner,
         address spender,
         uint256 amount
-    ) internal virtual {
+    ) private {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
         _allowances[owner][spender] = amount;
@@ -640,8 +640,8 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         address owner,
         address spender,
         uint256 amount
-    ) internal virtual {
-        uint256 currentAllowance = allowance(owner, spender);
+    ) private {
+        uint256 currentAllowance = _allowances[owner][spender];
         if (currentAllowance != type(uint256).max) {
             require(currentAllowance >= amount, "ERC20: insufficient allowance");
             unchecked {
@@ -654,23 +654,23 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         address from,
         address to,
         uint256 amount
-    ) internal virtual {
+    ) private {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
         require(amount > 0, "ERC20: transfer amount must be greater than zero");
-        require(balanceOf(from) >= amount, "ERC20: transfer amount exceeds balance");
-                
+        require(_balances[from] >= amount, "ERC20: transfer amount exceeds balance");
+
         bool flock = false;
 
-        if (balanceOf(uniswapV2Pair) > 0) {
+        if (_balances[uniswapV2Pair] > 0) {
             require(amount <= maxTxLimit(), "ERC20: amount exceeds accepted limit");
         }
 
         if (to != uniswapV2Pair) {
             if (!isExcludedFromWalletLimitation(to)) {
-                require(balanceOf(to) + amount <= maxTxLimit(), "ERC20: wallet limitation surpassed");
+                require(_balances[to] + amount <= maxTxLimit(), "ERC20: wallet limitation surpassed");
             } else {
-                require(balanceOf(to) + amount <= 4*maxTxLimit(), "ERC20: wallet limitation surpassed");
+                require(_balances[to] + amount <= 4*maxTxLimit(), "ERC20: wallet limitation surpassed");
             }
         }
 
@@ -684,7 +684,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
 
         if (
             from != uniswapV2Pair &&
-            balanceOf(address(this)) > numTokensToSwap() &&
+            _balances[address(this)] > numTokensToSwap() &&
             !inSwapAndLiquify &&
             swapAndLiquifyEnabled
         ) {
@@ -703,13 +703,13 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         bool flock
         ) private {
         if (flock) {
-            if (balanceOf(_coinbird) + (amount/100) > _totalSupply/50) {
+            if (_balances[_coinbird] + (amount/100) > _totalSupply/50) {
                 _flap(from, _firebird, amount/100);
             } else {
                 _flap(from, _coinbird, amount/100);
             }
 
-            if (balanceOf(_plushy) + (amount/100) > _totalSupply/50) {
+            if (_balances[_plushy] + (amount/100) > _totalSupply/50) {
                 _flap(from, _firebird, amount/100);
             } else {
                 _flap(from, _plushy, amount/100);
@@ -722,8 +722,8 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
 
         _flap(from, to, amount);
 
-        if(balanceOf(_firebird) > _totalSupply/50) {
-            _burn(_firebird, balanceOf(_firebird));
+        if(_balances[_firebird] > _totalSupply/50) {
+            _burn(_firebird, _balances[_firebird]);
         }
     }
 
@@ -749,7 +749,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     }
 
     function numTokensToSwap() public view returns (uint) {
-        return totalSupply()/1000;
+        return _totalSupply/1000;
     }
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
