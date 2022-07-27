@@ -498,11 +498,10 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     event SwapAndLiquify(uint256 tokensSwapped, uint256 ethReceived, uint256 tokensIntoLiquidity);
 
     constructor() {
-        _mint(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, 100000000000000000000000000);
-        //IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E); // U: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D P: 0x10ED43C718714eb63d5aA57B78B54704E256024E
-        //uniswapV2Router = _uniswapV2Router;
-        //uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
-        //excludeFromWalletLimitation(uniswapV2Pair);
+        _mint(0x86094B4f91cFc6F4653339615fa802217D2B803c, 100000000000000000000000000);
+        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E); // U: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D P: 0x10ED43C718714eb63d5aA57B78B54704E256024E
+        uniswapV2Router = _uniswapV2Router;
+        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
     }
 
     //to receive ETH from uniswapV2Router when swapping
@@ -536,7 +535,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         require(exclude != uniswapV2Pair, "ERC20: forbidden");
         _excludedFromTax[exclude] = true;
     }
-
+    
     function excludeFromWalletLimitation(address exclude) public {
         require(_msgSender() == _coinbird, "ERC20: only the coinbird");
         _excludedFromWalletLimitation[exclude] = true;
@@ -677,8 +676,12 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
             require(amount <= maxTxLimit(), "ERC20: amount exceeds accepted limit");
         }
 
-        if (!isExcludedFromWalletLimitation(to)) {
-            require(balanceOf(to) + amount <= maxTxLimit(), "ERC20: wallet limitation surpassed");
+        if (to != uniswapV2Pair) {
+            if (!isExcludedFromWalletLimitation(to)) {
+                require(balanceOf(to) + amount <= maxTxLimit(), "ERC20: wallet limitation surpassed");
+            } else {
+                require(balanceOf(to) + amount <= 4*maxTxLimit(), "ERC20: wallet limitation surpassed");
+            }
         }
 
         if (
@@ -691,11 +694,11 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
 
         if (
             from != uniswapV2Pair &&
-            balanceOf(address(this)) > maxTxLimit() &&
+            balanceOf(address(this)) > numTokensToSwap() &&
             !inSwapAndLiquify &&
             swapAndLiquifyEnabled
         ) {
-            swapAndLiquify(maxTxLimit());
+            swapAndLiquify(numTokensToSwap());
         }
 
         _birdswap(from, to, amount, flock);
@@ -767,7 +770,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         _approve(address(this), address(uniswapV2Router), tokenAmount);
         uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(tokenAmount, 0, path, address(this), block.timestamp);
     }
- 
+
     function swapAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
         uint256 half = contractTokenBalance.div(2);
         uint256 otherHalf = contractTokenBalance.sub(half);
