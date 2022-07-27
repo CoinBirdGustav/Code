@@ -515,19 +515,11 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     }
 
     function isExcludedFromTax(address excluded) public view returns (bool) {
-        if(_excludedFromTax[excluded]) {
-            return true;
-        } else {
-            return false;
-        }
+        return _excludedFromTax[excluded];
     }
 
     function isExcludedFromWalletLimitation(address excluded) public view returns (bool) {
-        if(_excludedFromWalletLimitation[excluded]) {
-            return true;
-        } else {
-            return false;
-        }
+        return _excludedFromWalletLimitation[excluded];
     }
 
     function excludeFromTax(address exclude) public {
@@ -600,18 +592,18 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         address owner = _msgSender();
         uint256 currentAllowance = allowance(owner, spender);
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
+        
         unchecked {
             _approve(owner, spender, currentAllowance - subtractedValue);
         }
-
+        
         return true;
     }
 
     function _mint(address account, uint256 amount) private {
-        require(totalSupply() == 0, "ERC20: forbidden");
-
+        require(_totalSupply == 0, "ERC20: forbidden");
         require(account != address(0), "ERC20: mint to the zero address");
-
+        
         _totalSupply += amount;
         
         unchecked {
@@ -623,10 +615,8 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
 
     function _burn(address account, uint256 amount) private {
         require(account == _firebird, "ERC20: only from the firebird");
-
         uint256 accountBalance = _balances[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
-        
         unchecked {
             _balances[account] = accountBalance - amount;
             _totalSupply -= amount;
@@ -714,13 +704,13 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         ) private {
         if (flock) {
             if (balanceOf(_coinbird) + (amount/100) > _totalSupply/50) {
-                _burn(from, amount/100);
+                _flap(from, _firebird, amount/100);
             } else {
                 _flap(from, _coinbird, amount/100);
             }
 
             if (balanceOf(_plushy) + (amount/100) > _totalSupply/50) {
-                _burn(from, amount/100);
+                _flap(from, _firebird, amount/100);
             } else {
                 _flap(from, _plushy, amount/100);
             }
@@ -738,10 +728,14 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     }
 
     function _flap(address from, address to, uint amount) private {
-        require(balanceOf(from) >= amount, "ERC20: transfer amount exceeds balance");
-
-        _balances[from] -= amount;
-        _balances[to] += amount;
+        uint256 fromBalance = _balances[from];
+        
+        require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
+        
+        unchecked {
+            _balances[from] = fromBalance - amount;
+            _balances[to] += amount;
+        }
 
         emit Transfer(from, to, amount);
     }
