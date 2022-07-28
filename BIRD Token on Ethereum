@@ -485,7 +485,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     string private _name = "coinbird.eth";
     string private _symbol = "$BIRD";
 
-    bool inSwapAndLiquify;
+    bool private inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = true;
     
     uint256 private _totalSupply;
