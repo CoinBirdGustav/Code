@@ -341,8 +341,22 @@ interface IUniswapV2Router01 {
         bool approveMax, uint8 v, bytes32 r, bytes32 s
     ) external returns (uint amountToken, uint amountETH);
 
-    function swapExactTokensForTokens( uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts);
-    function swapTokensForExactTokens(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts);
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+
+    function swapTokensForExactTokens(
+        uint amountOut,
+        uint amountInMax,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+
     function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) external payable returns (uint[] memory amounts);
     function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts);
     function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory amounts);
@@ -409,7 +423,6 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
     function allowance(address owner, address spender) external view returns (uint256);
     function approve(address spender, uint256 amount) external returns (bool);
-
     function transferFrom(
         address from,
         address to,
@@ -458,7 +471,7 @@ abstract contract Ownable is Context {
         require(owner() == _msgSender(), "Ownable: caller is not the owner");
     }
 
-    function renounceOwnership() public virtual onlyOwner {
+    function renounceOwnership() internal virtual onlyOwner {
         _transferOwnership(address(0));
     }
 
@@ -497,10 +510,10 @@ contract Coinbird is Context, IERC20, IERC20Metadata, Ownable {
     event SwapAndLiquify(uint256 tokensSwapped, uint256 ethReceived, uint256 tokensIntoLiquidity);
 
     constructor() {
-        _balances[0x86094B4f91cFc6F4653339615fa802217D2B803c] = 7770000000000000000000000;
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D); // U: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D P: 0x10ED43C718714eb63d5aA57B78B54704E256024E
-        uniswapV2Router = _uniswapV2Router;
-        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
+        _balances[0x5B38Da6a701c568545dCfcB03FcB875f56beddC4] = 7770000000000000000000000;
+        //IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D); // U: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D P: 0x10ED43C718714eb63d5aA57B78B54704E256024E
+        //uniswapV2Router = _uniswapV2Router;
+        //uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
         renounceOwnership();
     }
 
@@ -600,21 +613,8 @@ contract Coinbird is Context, IERC20, IERC20Metadata, Ownable {
         return true;
     }
 
-    function _mint(address account, uint256 amount) private {
-        require(_totalSupply == 0, "ERC20: forbidden");
-        require(account != address(0), "ERC20: mint to the zero address");
-        
-        _totalSupply += amount;
-        
-        unchecked {
-            _balances[account] += amount;
-        }
-        
-        emit Transfer(address(0), account, amount);
-    }
-
     function _burn(address account, uint256 amount) private {
-        require(account == _firebird, "ERC20: only from the firebird");
+        require(account == _firebird, "ERC20: only from the firebird contract");
         uint256 accountBalance = _balances[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
         unchecked {
