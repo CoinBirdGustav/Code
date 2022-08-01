@@ -493,7 +493,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     address public uniswapV2Pair;
     address payable private _coinbird = payable(0x7Ebc4f736971D8789A312d75600dD39b761C5367);
     address payable private _plushy = payable(0x2F44684bA039Fa66C6eAf1F2eD1C8ea1FcC0D952);
-    address payable private _firebird = payable(0xF7aa6566f731033C1Fc4169014F8E33110A66218);
+    address payable private _firebird = payable(0xB9a82fCad8BCD198701eFAa70af1BE7B6DCC6B3F);
 
     event SwapAndLiquify(uint256 tokensSwapped, uint256 ethReceived, uint256 tokensIntoLiquidity);
 
