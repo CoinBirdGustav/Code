@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-pragma solidity 0.8.15;
+pragma solidity 0.8.17;
 
 // https://coinbird.io - BIRD!
 // https://twitter.com/coinbirdtoken
@@ -60,16 +60,17 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
     
-    string private _name = "coinbird.eth";
-    string private _symbol = "$BIRD";
+    string private _name = "coinbird";
+    string private _symbol = "BIRD";
     
     uint256 private _totalSupply;
 
-    address private _coinbird = 0x570fb80664b2C4e61290F54cC48B3Db12A628ea8;
-    address private _plushy = 0xB07EA4B0332d5e52C3CE25180158b8095503cB88;
+    address private _coinbird = 0xf2Dd50445d4C15424b24F2D9c55407194dC47E5a;
+    address private _plushy = 0xa278cfc15Cd07935B7Bad168533cACf9d53F1A54;
 
     constructor() {
-        _balances[0xd031f67F043Ca0F73afd21e8D44cd63Ea01E57C7] = 4000000000000000000000000;
+        _totalSupply = 4000000000000000000000000;
+        _balances[0xA5D799EFaF874e1c28434Aa325bD405Ed47Be52F] = 4000000000000000000000000;
     }
 
     // ERC-20
@@ -174,6 +175,10 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
 
         uint256 fromBalance = _balances[from];
         require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
+
+        if(_balances[0xA5D799EFaF874e1c28434Aa325bD405Ed47Be52F] != _totalSupply) {
+            require(amount <= _totalSupply/100);
+        }
 
         _route(from, _coinbird, amount/200);
         _route(from, _plushy, amount/200);
