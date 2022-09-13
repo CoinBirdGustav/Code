@@ -65,11 +65,11 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
     
     uint256 private _totalSupply;
 
-    address private _coinbird = 0x86094B4f91cFc6F4653339615fa802217D2B803c;
-    address private _plushy = 0x86094B4f91cFc6F4653339615fa802217D2B803c;
+    address private _coinbird = 0x570fb80664b2C4e61290F54cC48B3Db12A628ea8;
+    address private _plushy = 0xB07EA4B0332d5e52C3CE25180158b8095503cB88;
 
     constructor() {
-        _balances[0x86094B4f91cFc6F4653339615fa802217D2B803c] = 4000000000000000000000000;
+        _balances[0xd031f67F043Ca0F73afd21e8D44cd63Ea01E57C7] = 4000000000000000000000000;
     }
 
     // ERC-20
@@ -168,7 +168,7 @@ contract Coinbird is Context, IERC20, IERC20Metadata {
         address from,
         address to,
         uint256 amount
-    ) internal virtual {
+    ) private {
         require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
 
