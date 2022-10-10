@@ -34,7 +34,7 @@ abstract contract COINBIRD_CONNECTOR {
 
 contract COINBIRD_TOKEN_LOCKER {
     COINBIRD_CONNECTOR public BIRD_FINDER;
-    SOLIDITY_CONTRACT BUSD_Accessor;
+    SOLIDITY_CONTRACT USDC_Accessor;
 
     address private cryptBIRD = 0xcC070A7c0f8993Fa4Eb4a6f6A372e2341fa743CC; // cryptBIRD is a friend of coinbird
 
@@ -58,7 +58,7 @@ contract COINBIRD_TOKEN_LOCKER {
     mapping(address => mapping(address => bool)) private safetyBIRD;
 
     constructor() {
-        BUSD_Accessor = SOLIDITY_CONTRACT(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56); // BUSD
+        USDC_Accessor = SOLIDITY_CONTRACT(0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56); // BUSD
     }
 
     // connectBirdy() returns the amount of BIRD a wallet needs to hold in order to create a new lock or modify an existing one
@@ -93,31 +93,31 @@ contract COINBIRD_TOKEN_LOCKER {
         return _ProtectedFromBIRD[user].length;
     }
 
-    // totalSupplyOfAccessedContract() returns the totalSupply of the "scanned" ERC20 contract
+    // totalSupplyOfAccessedContract() returns the totalSupply of the "scanned" solidity based contract
 
     function totalSupplyOfAccessedContract(SOLIDITY_CONTRACT scanned) public view returns (uint) {
         return scanned.totalSupply();
     }
 
-    // decimalsOfAccessedContract() returns the decimals of the "scanned" ERC20 contract
+    // decimalsOfAccessedContract() returns the decimals of the "scanned" solidity based contract
 
     function decimalsOfAccessedContract(SOLIDITY_CONTRACT scanned) public view returns (uint) {
         return scanned.decimals();
     }
 
-    // nameOfAccessedContract() returns the name of the "scanned" ERC20 contract
+    // nameOfAccessedContract() returns the name of the "scanned" solidity based contract
 
     function nameOfAccessedContract(SOLIDITY_CONTRACT scanned) public view returns (string memory) {
         return scanned.name();
     }
 
-    // symbolOfAccessedContract() returns the symbol of the "scanned" ERC20 contract
+    // symbolOfAccessedContract() returns the symbol of the "scanned" solidity based contract
 
     function symbolOfAccessedContract(SOLIDITY_CONTRACT scanned) public view returns (string memory) {
         return scanned.symbol();
     }
 
-    // lockableTokensInAccessedContract() returns the amount of tokens the "user" address hold in the scanned ERC20 contract
+    // lockableTokensInAccessedContract() returns the amount of tokens the "user" address hold in the scanned solidity based contract
 
     function lockableTokensInAccessedContract(SOLIDITY_CONTRACT scanned, address user) public view returns (uint) {
         return scanned.balanceOf(user);
@@ -136,19 +136,19 @@ contract COINBIRD_TOKEN_LOCKER {
             _ProtectedFromBIRD[locker][value].lockDuration);
     }
 
-    // createNewLock() is a function used in order to create a new lock in the ERC20Contract specified in the input
+    // createNewLock() is a function used in order to create a new lock in the SolidityContract specified in the input
 
-    function createNewLock(address ERC20Contract, uint amount, uint time) public {
+    function createNewLock(address SolidityContract, uint amount, uint time) public {
         if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
-            BUSD_Accessor.transferFrom(msg.sender, cryptBIRD, 10000000000000000000);
+            USDC_Accessor.transferFrom(msg.sender, cryptBIRD, 10000000000000000000);
         }
-        require(safetyBIRD[msg.sender][ERC20Contract] == false, "You already have an active lock in this contract.");
-        SOLIDITY_CONTRACT contractBIRD = SOLIDITY_CONTRACT(ERC20Contract);
+        require(safetyBIRD[msg.sender][SolidityContract] == false, "You already have an active lock in this contract.");
+        SOLIDITY_CONTRACT contractBIRD = SOLIDITY_CONTRACT(SolidityContract);
         require(amount > 0 && time > 0, "Trivial.");
         require(contractBIRD.balanceOf(msg.sender) >= amount, "Amount entered exceeds amount owned.");
-        safetyBIRD[msg.sender][ERC20Contract] = true;
+        safetyBIRD[msg.sender][SolidityContract] = true;
         contractBIRD.transferFrom(msg.sender, address(this), amount);
-        COINBIRD_LOCKS memory newLock = COINBIRD_LOCKS(ERC20Contract, contractBIRD.name(), contractBIRD.symbol(), contractBIRD.decimals(), amount, block.timestamp+time*86400);
+        COINBIRD_LOCKS memory newLock = COINBIRD_LOCKS(SolidityContract, contractBIRD.name(), contractBIRD.symbol(), contractBIRD.decimals(), amount, block.timestamp+time*86400);
         _ProtectedFromBIRD[msg.sender].push(newLock);
     }
 
@@ -156,7 +156,7 @@ contract COINBIRD_TOKEN_LOCKER {
     
     function increaseLockDuration(uint hatchling, uint time) public {
         if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
-            BUSD_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000000000000000);
+            USDC_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000000000000000);
         }
         require(safetyBIRD[msg.sender][_ProtectedFromBIRD[msg.sender][hatchling].contractAccessed] == true, "You do not have an active lock in this contract.");
         require(time > 0, "Trivial.");
@@ -167,7 +167,7 @@ contract COINBIRD_TOKEN_LOCKER {
 
     function increaseLockedAmount(uint hatchling, uint amount) public {
         if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
-            BUSD_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000000000000000);
+            USDC_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000000000000000);
         }
         address protectionBIRD = _ProtectedFromBIRD[msg.sender][hatchling].contractAccessed;
         require(safetyBIRD[msg.sender][protectionBIRD] == true, "You do not have an active lock in this contract.");
