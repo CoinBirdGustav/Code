@@ -1,8 +1,13 @@
+/**
+ *Submitted for verification at EtherScan.io on 2022-10-10
+*/
+
 // SPDX-License-Identifier: NONE
 // This code is copyright protected.
 // All rights reserved © coinbird 2022
 // The unauthorized reproduction, modification, expansion upon or redeployment of this work is illegal.
 // Improvement suggestions are more than welcome. If you have any, please let the coinbird know and they will be examined.
+// You are using this code at your own risk. We do not give any warranties and will not be liable for any loss, direct or indirect through use of this code.
 
 pragma solidity 0.8.17;
 
@@ -10,7 +15,7 @@ pragma solidity 0.8.17;
 // https://twitter.com/coinbirdtoken
 // https://github.com/coinbirdtoken
 // https://t.me/coinbirdtoken
-
+// gustav@coinbird.io - COINBIRD!
 
 abstract contract SOLIDITY_CONTRACT {
     function name() external virtual view returns (string memory);
@@ -24,6 +29,8 @@ abstract contract SOLIDITY_CONTRACT {
     function balanceOf(address account) external virtual view returns (uint256);
 
     function transferFrom(address sender, address recipient, uint256 amount) external virtual returns (address);
+
+    function transfer(address recipient, uint256 amount) external virtual returns (address);
 }
 
 
@@ -34,7 +41,7 @@ abstract contract COINBIRD_CONNECTOR {
 
 contract COINBIRD_TOKEN_LOCKER {
     COINBIRD_CONNECTOR public BIRD_FINDER;
-    SOLIDITY_CONTRACT USDC_Accessor;
+    SOLIDITY_CONTRACT USD_Accessor;
 
     address private cryptBIRD = 0xcC070A7c0f8993Fa4Eb4a6f6A372e2341fa743CC; // cryptBIRD is a friend of coinbird
 
@@ -58,7 +65,7 @@ contract COINBIRD_TOKEN_LOCKER {
     mapping(address => mapping(address => bool)) private safetyBIRD;
 
     constructor() {
-        USDC_Accessor = SOLIDITY_CONTRACT(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48); // USDC
+        USD_Accessor = SOLIDITY_CONTRACT(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48); // USD
     }
 
     // connectBirdy() returns the amount of BIRD a wallet needs to hold in order to create a new lock or modify an existing one
@@ -140,7 +147,7 @@ contract COINBIRD_TOKEN_LOCKER {
 
     function createNewLock(address SolidityContract, uint amount, uint time) public {
         if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
-            USDC_Accessor.transferFrom(msg.sender, cryptBIRD, 10000000);
+            USD_Accessor.transferFrom(msg.sender, cryptBIRD, 10000000);
         }
         require(safetyBIRD[msg.sender][SolidityContract] == false, "You already have an active lock in this contract.");
         SOLIDITY_CONTRACT contractBIRD = SOLIDITY_CONTRACT(SolidityContract);
@@ -148,7 +155,7 @@ contract COINBIRD_TOKEN_LOCKER {
         require(contractBIRD.balanceOf(msg.sender) >= amount, "Amount entered exceeds amount owned.");
         safetyBIRD[msg.sender][SolidityContract] = true;
         contractBIRD.transferFrom(msg.sender, address(this), amount);
-        COINBIRD_LOCKS memory newLock = COINBIRD_LOCKS(SolidityContract, contractBIRD.name(), contractBIRD.symbol(), contractBIRD.decimals(), amount, block.timestamp+time*86400);
+        COINBIRD_LOCKS memory newLock = COINBIRD_LOCKS(SolidityContract, contractBIRD.name(), contractBIRD.symbol(), contractBIRD.decimals(), amount, block.timestamp+time);
         _ProtectedFromBIRD[msg.sender].push(newLock);
     }
 
@@ -156,18 +163,18 @@ contract COINBIRD_TOKEN_LOCKER {
     
     function increaseLockDuration(uint hatchling, uint time) public {
         if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
-            USDC_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000);
+            USD_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000);
         }
         require(safetyBIRD[msg.sender][_ProtectedFromBIRD[msg.sender][hatchling].contractAccessed] == true, "You do not have an active lock in this contract.");
         require(time > 0, "Trivial.");
-        _ProtectedFromBIRD[msg.sender][hatchling].lockDuration += time*86400;
+        _ProtectedFromBIRD[msg.sender][hatchling].lockDuration += time;
     }
 
     // increaseLockedAmount() can be called whenever the msg.sender wishes to increase the amount of tokens within an active lock they previously created
 
     function increaseLockedAmount(uint hatchling, uint amount) public {
         if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
-            USDC_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000);
+            USD_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000);
         }
         address protectionBIRD = _ProtectedFromBIRD[msg.sender][hatchling].contractAccessed;
         require(safetyBIRD[msg.sender][protectionBIRD] == true, "You do not have an active lock in this contract.");
@@ -186,7 +193,7 @@ contract COINBIRD_TOKEN_LOCKER {
         SOLIDITY_CONTRACT contractBIRD = SOLIDITY_CONTRACT(accessBIRD);
         require(safetyBIRD[msg.sender][accessBIRD] == true, "Reentrancy protection.");
         safetyBIRD[msg.sender][accessBIRD] = false;
-        contractBIRD.transferFrom(address(this), msg.sender, _ProtectedFromBIRD[msg.sender][hatchling].amountLocked);
+        contractBIRD.transfer(msg.sender, _ProtectedFromBIRD[msg.sender][hatchling].amountLocked);
         uint dummyBIRD = _ProtectedFromBIRD[msg.sender].length - 1;
         COINBIRD_LOCKS memory killerBIRD = _ProtectedFromBIRD[msg.sender][dummyBIRD];
         _ProtectedFromBIRD[msg.sender][hatchling] = killerBIRD;
