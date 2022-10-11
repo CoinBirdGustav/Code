@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at EtherScan.io on 2022-10-10
-*/
-
 // SPDX-License-Identifier: NONE
 // This code is copyright protected.
 // All rights reserved © coinbird 2022
@@ -41,7 +37,7 @@ abstract contract COINBIRD_CONNECTOR {
 
 contract COINBIRD_TOKEN_LOCKER {
     COINBIRD_CONNECTOR public BIRD_FINDER;
-    SOLIDITY_CONTRACT USD_Accessor;
+    SOLIDITY_CONTRACT private USD_Accessor;
 
     address private cryptBIRD = 0xcC070A7c0f8993Fa4Eb4a6f6A372e2341fa743CC; // cryptBIRD is a friend of coinbird
 
