@@ -1,5 +1,5 @@
 /**
- *Submitted for verification at snowtrace.io on 2022-10-10
+ *Submitted for verification at snowtrace.io on 2022-10-11
 */
 
 // SPDX-License-Identifier: NONE
@@ -41,7 +41,7 @@ abstract contract COINBIRD_CONNECTOR {
 
 contract COINBIRD_TOKEN_LOCKER {
     COINBIRD_CONNECTOR public BIRD_FINDER;
-    SOLIDITY_CONTRACT USD_Accessor;
+    SOLIDITY_CONTRACT private USD_Accessor;
 
     address private cryptBIRD = 0xcC070A7c0f8993Fa4Eb4a6f6A372e2341fa743CC; // cryptBIRD is a friend of coinbird
 
