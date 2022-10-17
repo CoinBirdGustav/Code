@@ -148,7 +148,7 @@ contract COINBIRD_TOKEN_LOCKER {
     // createNewLock() is a function used in order to create a new lock in the SolidityContract specified in the input
 
     function createNewLock(address SolidityContract, uint amount, uint time) public {
-        if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
+        if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
             USD_Accessor.transferFrom(msg.sender, cryptBIRD, 10000000);
         }
         require(safetyBIRD[msg.sender][SolidityContract] == false, "You already have an active lock in this contract.");
@@ -164,7 +164,7 @@ contract COINBIRD_TOKEN_LOCKER {
     // increaseLockDuration() can be called whenever the msg.sender wishes to increase the duration of an active lock they previously created
     
     function increaseLockDuration(uint hatchling, uint time) public {
-        if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
+        if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
             USD_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000);
         }
         require(safetyBIRD[msg.sender][_ProtectedFromBIRD[msg.sender][hatchling].contractAccessed] == true, "You do not have an active lock in this contract.");
@@ -175,7 +175,7 @@ contract COINBIRD_TOKEN_LOCKER {
     // increaseLockedAmount() can be called whenever the msg.sender wishes to increase the amount of tokens within an active lock they previously created
 
     function increaseLockedAmount(uint hatchling, uint amount) public {
-        if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000)  || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
+        if (BIRD_FINDER == COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) || (BIRD_FINDER != COINBIRD_CONNECTOR(0x0000000000000000000000000000000000000000) && ownedBIRD(msg.sender) < coinbirdBouncer())) {
             USD_Accessor.transferFrom(msg.sender, cryptBIRD, 4000000);
         }
         address protectionBIRD = _ProtectedFromBIRD[msg.sender][hatchling].contractAccessed;
